@@ -130,7 +130,10 @@ function TxModal({ route, fromToken, toToken, amount, onClose }: { route: RouteR
       <div style={{ width: "100%", maxWidth: 420, background: "#0D1117", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 24, boxShadow: "0 32px 80px rgba(0,0,0,0.7)" }}>
 
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-          <span style={{ fontSize: 15, fontWeight: 700, color: "#F0F4FF" }}>Confirm Swap</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+  <span style={{ fontSize: 15, fontWeight: 700, color: "#F0F4FF" }}>Confirm Swap</span>
+  <span style={{ fontSize: 11, fontFamily: "monospace", color: "#F3BA2F", background: "rgba(243,186,47,0.1)", padding: "2px 8px", borderRadius: 5 }}>SIMULATED</span>
+</div>
           {(status === "idle" || status === "done") && (
             <button onClick={onClose} style={{ background: "none", border: "none", color: "#3D4F6B", cursor: "pointer", fontSize: 20, lineHeight: 1, padding: 0 }}>×</button>
           )}
@@ -196,8 +199,9 @@ function TxModal({ route, fromToken, toToken, amount, onClose }: { route: RouteR
 
         {status === "idle" && (
           <button onClick={simulate} style={{ width: "100%", padding: 15, borderRadius: 14, background: "#00E5FF", color: "#060810", border: "none", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
-            Confirm & Swap
+            Confirm Swap · Simulated
           </button>
+          
         )}
         {status === "done" && (
           <button onClick={onClose} style={{ width: "100%", padding: 15, borderRadius: 14, background: "transparent", color: "#00E5FF", border: "1px solid rgba(0,229,255,0.3)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
@@ -381,7 +385,7 @@ export function SwapInterface() {
                 );
               })}
               <button onClick={() => setShowTx(true)} style={{ width: "100%", marginTop: 8, padding: 15, borderRadius: 14, background: "transparent", color: "#00E5FF", border: "1px solid rgba(0,229,255,0.25)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
-                {address ? "Confirm Swap" : "Connect Wallet to Swap"}
+                {address ? "Confirm Swap · Simulated" : "Connect Wallet to Swap"}
               </button>
             </div>
           )}
