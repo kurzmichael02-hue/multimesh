@@ -44,10 +44,19 @@ export async function getRoutes(req: RouteRequest): Promise<RouteResult[]> {
     headers: { "Content-Type": "application/json" },
   });
 
-  if (!res.ok) throw new Error("Failed to fetch routes");
   const data = await res.json();
 
-  if (!data.estimate) throw new Error("No route found");
+  // handle LI.FI specific errors
+  if (!res.ok) {
+    const code = data?.code;
+    if (code === "AMOUNT_TOO_HIGH") throw new Error("Amount too high — try a smaller value.");
+    if (code === "AMOUNT_TOO_LOW") throw new Error("Amount too low — try a larger value.");
+    if (code === "NO_POSSIBLE_ROUTE") throw new Error("No route found for this pair. Try different tokens or chains.");
+    if (code === "NOT_FOUND") throw new Error("Token or chain not supported.");
+    throw new Error(data?.message ?? "Could not fetch routes.");
+  }
+
+  if (!data.estimate) throw new Error("No route found for this pair. Try different tokens or chains.");
 
   const route: RouteResult = {
     id: data.id ?? "quote",
