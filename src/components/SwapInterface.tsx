@@ -313,7 +313,10 @@ const S = {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
             <div>
               <div style={{ fontSize: 20, fontWeight: 700, color: "#F0F4FF", letterSpacing: -0.5 }}>MULTI<span style={{ color: "#00E5FF" }}>MESH</span></div>
-              <div style={{ fontSize: 11, color: "#3D4F6B", fontFamily: "monospace", marginTop: 2, letterSpacing: 1 }}>Cross-Chain Swap Aggregator</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
+  <div style={{ fontSize: 11, color: "#3D4F6B", fontFamily: "monospace", letterSpacing: 1 }}>Cross-Chain Swap Aggregator</div>
+  <span style={{ fontSize: 9, fontFamily: "monospace", color: "#F3BA2F", background: "rgba(243,186,47,0.1)", padding: "1px 6px", borderRadius: 4, letterSpacing: 1 }}>BETA</span>
+</div>
             </div>
             <ConnectButton chainStatus="none" showBalance={false} />
           </div>
