@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { useAccount } from "wagmi";
+import { useAccount, useBalance } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { SUPPORTED_CHAINS, SUPPORTED_TOKENS, Token } from "@/lib/wagmi";
 import { getRoutes, getRiskLabel, RouteResult } from "@/lib/lifi";
@@ -14,12 +14,16 @@ const TOKEN_LOGOS: Record<string, string> = {
   USDT:  "https://assets.coingecko.com/coins/images/325/small/Tether.png",
   MATIC: "https://assets.coingecko.com/coins/images/4713/small/polygon.png",
   BNB:   "https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png",
+  ARB:   "https://assets.coingecko.com/coins/images/16547/small/photo_2023-03-29_21.47.00.jpeg",
+  OP:    "https://assets.coingecko.com/coins/images/25244/small/Optimism.png",
 };
 
 const CHAIN_LOGOS: Record<number, string> = {
   1:         "https://assets.coingecko.com/coins/images/279/small/ethereum.png",
   137:       "https://assets.coingecko.com/coins/images/4713/small/polygon.png",
   56:        "https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png",
+  42161:     "https://assets.coingecko.com/coins/images/16547/small/photo_2023-03-29_21.47.00.jpeg",
+  10:        "https://assets.coingecko.com/coins/images/25244/small/Optimism.png",
   11155111:  "https://assets.coingecko.com/coins/images/279/small/ethereum.png",
 };
 
@@ -58,7 +62,7 @@ function ChainDropdown({ value, onChange }: { value: typeof SUPPORTED_CHAINS[0];
         <span style={{ fontSize: 9, color: "#3D4F6B" }}>▾</span>
       </button>
       {open && (
-        <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, background: "#0D1117", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: 6, zIndex: 100, minWidth: 160, boxShadow: "0 16px 40px rgba(0,0,0,0.6)" }}>
+        <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, background: "#0D1117", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: 6, zIndex: 100, minWidth: 170, boxShadow: "0 16px 40px rgba(0,0,0,0.6)" }}>
           {SUPPORTED_CHAINS.map(c => (
             <button key={c.id} onClick={() => { onChange(c); setOpen(false); }}
               style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 10px", background: c.id === value.id ? "rgba(0,229,255,0.06)" : "transparent", border: "none", borderRadius: 8, cursor: "pointer" }}>
@@ -234,6 +238,14 @@ export function SwapInterface() {
   const [showBanner, setShowBanner] = useState(true);
   const swap = useSwapExecution();
 
+  // Wallet balance for the selected from token
+  const isNativeToken = fromToken.address === "0x0000000000000000000000000000000000000000";
+  const { data: balanceData } = useBalance({
+    address,
+    token: isNativeToken ? undefined : fromToken.address as `0x${string}`,
+    chainId: fromChain.id,
+  });
+
   const fromTokens = SUPPORTED_TOKENS[fromChain.id] ?? [];
   const toTokens   = SUPPORTED_TOKENS[toChain.id]   ?? [];
   const reset = () => { setRoutes([]); setSelectedRoute(null); setRoutesVisible(false); setShowDetails(false); };
@@ -260,21 +272,21 @@ export function SwapInterface() {
   const fmt = (raw: string, dec: number) => { try { return parseFloat(ethers.formatUnits(raw, dec)).toFixed(6); } catch { return "—"; } };
   const fmtTime = (s: number) => s < 60 ? `~${s}s` : `~${Math.ceil(s / 60)}m`;
 
-  
-const S = {
-  page: { minHeight: "100vh", background: "#060810", display: "flex", flexDirection: "column" as const, alignItems: "center", justifyContent: "center", padding: "24px 12px", position: "relative" as const, overflow: "hidden", fontFamily: "'DM Sans', sans-serif" },
-  card: { width: "100%", maxWidth: 468, position: "relative" as const, zIndex: 1 },
-  swapCard: { background: "rgba(13,17,23,0.95)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 20, padding: "14px 12px", backdropFilter: "blur(20px)", boxShadow: "0 0 0 1px rgba(0,229,255,0.04), 0 24px 64px rgba(0,0,0,0.5)" },
-  box: { background: "rgba(6,8,16,0.8)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, padding: "12px 14px" },
-  boxLabel: { fontSize: 11, color: "#3D4F6B", fontFamily: "monospace", letterSpacing: "1.5px", textTransform: "uppercase" as const, marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center" },
-  row: { display: "flex", alignItems: "center", gap: 8 },
-  input: { flex: 1, background: "transparent", border: "none", outline: "none", fontSize: 24, fontWeight: 700, color: "#F0F4FF", fontFamily: "'DM Sans', sans-serif", minWidth: 0, maxWidth: "100%" },
-};
+  const S = {
+    page: { minHeight: "100vh", background: "#060810", display: "flex", flexDirection: "column" as const, alignItems: "center", justifyContent: "center", padding: "24px 12px", position: "relative" as const, overflow: "hidden", fontFamily: "'DM Sans', sans-serif" },
+    card: { width: "100%", maxWidth: 468, position: "relative" as const, zIndex: 1 },
+    swapCard: { background: "rgba(13,17,23,0.95)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 20, padding: "14px 12px", backdropFilter: "blur(20px)", boxShadow: "0 0 0 1px rgba(0,229,255,0.04), 0 24px 64px rgba(0,0,0,0.5)" },
+    box: { background: "rgba(6,8,16,0.8)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, padding: "12px 14px" },
+    boxLabel: { fontSize: 11, color: "#3D4F6B", fontFamily: "monospace", letterSpacing: "1.5px", textTransform: "uppercase" as const, marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center" },
+    row: { display: "flex", alignItems: "center", gap: 8 },
+    input: { flex: 1, background: "transparent", border: "none", outline: "none", fontSize: 24, fontWeight: 700, color: "#F0F4FF", fontFamily: "'DM Sans', sans-serif", minWidth: 0, maxWidth: "100%" },
+  };
 
   return (
     <>
       <style>{`@keyframes mmSpin{to{transform:rotate(360deg)}}@keyframes mmPulse{0%,100%{opacity:1}50%{opacity:0.4}}@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}`}</style>
 
+      {/* Executing swap modal */}
       {swap.step !== "idle" && swap.step !== "done" && swap.step !== "failed" && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 24 }}>
           <div style={{ width: "100%", maxWidth: 420, background: "#0D1117", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 24, boxShadow: "0 32px 80px rgba(0,0,0,0.7)" }}>
@@ -291,12 +303,24 @@ const S = {
         </div>
       )}
 
+      {/* Swap complete modal */}
       {swap.step === "done" && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 24 }}>
           <div style={{ width: "100%", maxWidth: 420, background: "#0D1117", border: "1px solid rgba(0,229,255,0.3)", borderRadius: 20, padding: 24 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "#00E5FF", marginBottom: 8 }}>Swap Complete</div>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#00E5FF", marginBottom: 8 }}>Swap Complete ✓</div>
             {swap.explorerLink && <a href={swap.explorerLink} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: "#00E5FF", fontFamily: "monospace" }}>View on LI.FI Explorer</a>}
             <button onClick={swap.reset} style={{ width: "100%", marginTop: 16, padding: 14, borderRadius: 12, background: "transparent", color: "#00E5FF", border: "1px solid rgba(0,229,255,0.3)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Done</button>
+          </div>
+        </div>
+      )}
+
+      {/* Swap failed modal */}
+      {swap.step === "failed" && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 24 }}>
+          <div style={{ width: "100%", maxWidth: 420, background: "#0D1117", border: "1px solid rgba(252,129,129,0.3)", borderRadius: 20, padding: 24 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#FC8181", marginBottom: 8 }}>Swap Failed</div>
+            {swap.error && <div style={{ fontSize: 12, fontFamily: "monospace", color: "#A0B0C8", marginBottom: 16, lineHeight: 1.5 }}>{swap.error}</div>}
+            <button onClick={swap.reset} style={{ width: "100%", padding: 14, borderRadius: 12, background: "transparent", color: "#FC8181", border: "1px solid rgba(252,129,129,0.3)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Try Again</button>
           </div>
         </div>
       )}
@@ -307,11 +331,11 @@ const S = {
 
       <div style={S.page}>
         {showBanner && (
-  <div style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 300, background: "rgba(243,186,47,0.08)", borderBottom: "1px solid rgba(243,186,47,0.15)", padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-    <span style={{ fontSize: 12, fontFamily: "monospace", color: "#F3BA2F" }}>⚠ MultiMesh is in beta. Use small amounts and proceed with caution.</span>
-    <button onClick={() => setShowBanner(false)} style={{ background: "none", border: "none", color: "#3D4F6B", cursor: "pointer", fontSize: 16, padding: 0, marginLeft: 12 }}>×</button>
-  </div>
-)}
+          <div style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 300, background: "rgba(243,186,47,0.08)", borderBottom: "1px solid rgba(243,186,47,0.15)", padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ fontSize: 12, fontFamily: "monospace", color: "#F3BA2F" }}>⚠ MultiMesh is in beta. Use small amounts and proceed with caution.</span>
+            <button onClick={() => setShowBanner(false)} style={{ background: "none", border: "none", color: "#3D4F6B", cursor: "pointer", fontSize: 16, padding: 0, marginLeft: 12 }}>×</button>
+          </div>
+        )}
         <div style={{ position: "fixed", top: -200, left: -200, width: 600, height: 600, background: "radial-gradient(circle,rgba(0,229,255,0.04) 0%,transparent 70%)", pointerEvents: "none" }} />
         <div style={{ position: "fixed", bottom: -200, right: -200, width: 500, height: 500, background: "radial-gradient(circle,rgba(123,97,255,0.04) 0%,transparent 70%)", pointerEvents: "none" }} />
         <div style={{ position: "fixed", inset: 0, backgroundImage: "linear-gradient(rgba(0,229,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,0.025) 1px,transparent 1px)", backgroundSize: "48px 48px", pointerEvents: "none" }} />
@@ -321,9 +345,9 @@ const S = {
             <div>
               <div style={{ fontSize: 20, fontWeight: 700, color: "#F0F4FF", letterSpacing: -0.5 }}>MULTI<span style={{ color: "#00E5FF" }}>MESH</span></div>
               <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
-  <div style={{ fontSize: 11, color: "#3D4F6B", fontFamily: "monospace", letterSpacing: 1 }}>Cross-Chain Swap Aggregator</div>
-  <span style={{ fontSize: 9, fontFamily: "monospace", color: "#F3BA2F", background: "rgba(243,186,47,0.1)", padding: "1px 6px", borderRadius: 4, letterSpacing: 1 }}>BETA</span>
-</div>
+                <div style={{ fontSize: 11, color: "#3D4F6B", fontFamily: "monospace", letterSpacing: 1 }}>Cross-Chain Swap Aggregator</div>
+                <span style={{ fontSize: 9, fontFamily: "monospace", color: "#F3BA2F", background: "rgba(243,186,47,0.1)", padding: "1px 6px", borderRadius: 4, letterSpacing: 1 }}>BETA</span>
+              </div>
             </div>
             <ConnectButton chainStatus="none" showBalance={false} />
           </div>
@@ -338,6 +362,15 @@ const S = {
                 <input style={S.input} type="number" placeholder="0.00" value={amount} onChange={e => { setAmount(e.target.value); reset(); }} />
                 <TokenDropdown value={fromToken} tokens={fromTokens} onChange={t => { setFromToken(t); reset(); }} />
               </div>
+              {/* Wallet balance */}
+              {address && balanceData && (
+                <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 6 }}>
+                  <span style={{ fontSize: 11, fontFamily: "monospace", color: "#3D4F6B" }}>Balance:</span>
+                  <button onClick={() => setAmount(parseFloat(balanceData.formatted).toFixed(6))} style={{ fontSize: 11, fontFamily: "monospace", color: "#00E5FF", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                    {parseFloat(balanceData.formatted).toFixed(4)} {balanceData.symbol}
+                  </button>
+                </div>
+              )}
             </div>
 
             <div style={{ display: "flex", justifyContent: "center", margin: "4px 0" }}>
@@ -356,7 +389,6 @@ const S = {
                 <TokenDropdown value={toToken} tokens={toTokens} onChange={t => { setToToken(t); reset(); }} />
               </div>
 
-              {/* Simplified summary — always visible when route found */}
               {selectedRoute && (
                 <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.04)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -374,13 +406,11 @@ const S = {
                         <div style={{ fontSize: 12, fontFamily: "monospace", color: getRiskLabel(selectedRoute.tags).color, marginTop: 2 }}>{getRiskLabel(selectedRoute.tags).label}</div>
                       </div>
                     </div>
-                    {/* Details toggle */}
                     <button onClick={() => setShowDetails(d => !d)} style={{ fontSize: 11, fontFamily: "monospace", color: "#3D4F6B", background: "none", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 6, padding: "3px 8px", cursor: "pointer" }}>
-                      {showDetails ? "Hide details ▲" : "Details ▾"}
+                      {showDetails ? "Hide ▲" : "Details ▾"}
                     </button>
                   </div>
 
-                  {/* Expanded details */}
                   {showDetails && (
                     <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.04)" }}>
                       <div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1, marginBottom: 6 }}>ROUTE</div>
@@ -391,11 +421,9 @@ const S = {
                           ))}
                         </div>
                       )}
-                      <div style={{ display: "flex", gap: 12 }}>
-                        <div>
-                          <div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1 }}>VALUE OUT</div>
-                          <div style={{ fontSize: 12, fontFamily: "monospace", color: "#A0B0C8", marginTop: 2 }}>~${parseFloat(selectedRoute.toAmountUSD || "0").toFixed(2)}</div>
-                        </div>
+                      <div>
+                        <div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1 }}>VALUE OUT</div>
+                        <div style={{ fontSize: 12, fontFamily: "monospace", color: "#A0B0C8", marginTop: 2 }}>~${parseFloat(selectedRoute.toAmountUSD || "0").toFixed(2)}</div>
                       </div>
                     </div>
                   )}
@@ -430,7 +458,7 @@ const S = {
             </div>
           )}
 
-          <div style={{ fontSize: 11, fontFamily: "monospace", color: "#1C2A3A", textAlign: "center", marginTop: 20 }}>Powered by LI.FI &nbsp;·&nbsp; ETH &nbsp;·&nbsp; MATIC &nbsp;·&nbsp; BNB</div>
+          <div style={{ fontSize: 11, fontFamily: "monospace", color: "#1C2A3A", textAlign: "center", marginTop: 20 }}>Powered by LI.FI &nbsp;·&nbsp; ETH &nbsp;·&nbsp; MATIC &nbsp;·&nbsp; BNB &nbsp;·&nbsp; ARB &nbsp;·&nbsp; OP</div>
         </div>
       </div>
     </>
