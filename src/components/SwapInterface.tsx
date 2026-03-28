@@ -259,15 +259,16 @@ export function SwapInterface() {
   const fmt = (raw: string, dec: number) => { try { return parseFloat(ethers.formatUnits(raw, dec)).toFixed(6); } catch { return "—"; } };
   const fmtTime = (s: number) => s < 60 ? `~${s}s` : `~${Math.ceil(s / 60)}m`;
 
-  const S = {
-    page: { minHeight: "100vh", background: "#060810", display: "flex", flexDirection: "column" as const, alignItems: "center", justifyContent: "center", padding: 24, position: "relative" as const, overflow: "hidden", fontFamily: "'DM Sans', sans-serif" },
-    card: { width: "100%", maxWidth: 468, position: "relative" as const, zIndex: 1 },
-    swapCard: { background: "rgba(13,17,23,0.95)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 20, padding: 16, backdropFilter: "blur(20px)", boxShadow: "0 0 0 1px rgba(0,229,255,0.04), 0 24px 64px rgba(0,0,0,0.5)" },
-    box: { background: "rgba(6,8,16,0.8)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, padding: "14px 16px" },
-    boxLabel: { fontSize: 11, color: "#3D4F6B", fontFamily: "monospace", letterSpacing: "1.5px", textTransform: "uppercase" as const, marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center" },
-    row: { display: "flex", alignItems: "center", gap: 10 },
-    input: { flex: 1, background: "transparent", border: "none", outline: "none", fontSize: 28, fontWeight: 700, color: "#F0F4FF", fontFamily: "'DM Sans', sans-serif", minWidth: 0 },
-  };
+  
+const S = {
+  page: { minHeight: "100vh", background: "#060810", display: "flex", flexDirection: "column" as const, alignItems: "center", justifyContent: "center", padding: "24px 12px", position: "relative" as const, overflow: "hidden", fontFamily: "'DM Sans', sans-serif" },
+  card: { width: "100%", maxWidth: 468, position: "relative" as const, zIndex: 1 },
+  swapCard: { background: "rgba(13,17,23,0.95)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 20, padding: "14px 12px", backdropFilter: "blur(20px)", boxShadow: "0 0 0 1px rgba(0,229,255,0.04), 0 24px 64px rgba(0,0,0,0.5)" },
+  box: { background: "rgba(6,8,16,0.8)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, padding: "12px 14px" },
+  boxLabel: { fontSize: 11, color: "#3D4F6B", fontFamily: "monospace", letterSpacing: "1.5px", textTransform: "uppercase" as const, marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center" },
+  row: { display: "flex", alignItems: "center", gap: 8 },
+  input: { flex: 1, background: "transparent", border: "none", outline: "none", fontSize: 24, fontWeight: 700, color: "#F0F4FF", fontFamily: "'DM Sans', sans-serif", minWidth: 0, maxWidth: "100%" },
+};
 
   return (
     <>
