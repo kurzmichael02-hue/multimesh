@@ -17,9 +17,10 @@ const TOKEN_LOGOS: Record<string, string> = {
 };
 
 const CHAIN_LOGOS: Record<number, string> = {
-  1:   "https://assets.coingecko.com/coins/images/279/small/ethereum.png",
-  137: "https://assets.coingecko.com/coins/images/4713/small/polygon.png",
-  56:  "https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png",
+  1:         "https://assets.coingecko.com/coins/images/279/small/ethereum.png",
+  137:       "https://assets.coingecko.com/coins/images/4713/small/polygon.png",
+  56:        "https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png",
+  11155111:  "https://assets.coingecko.com/coins/images/279/small/ethereum.png",
 };
 
 type TxStatus = "idle" | "pending" | "bridging" | "swapping" | "done";
@@ -129,12 +130,11 @@ function TxModal({ route, fromToken, toToken, amount, onClose }: { route: RouteR
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 24 }}>
       <div style={{ width: "100%", maxWidth: 420, background: "#0D1117", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 24, boxShadow: "0 32px 80px rgba(0,0,0,0.7)" }}>
-
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-  <span style={{ fontSize: 15, fontWeight: 700, color: "#F0F4FF" }}>Confirm Swap</span>
-  <span style={{ fontSize: 11, fontFamily: "monospace", color: "#F3BA2F", background: "rgba(243,186,47,0.1)", padding: "2px 8px", borderRadius: 5 }}>SIMULATED</span>
-</div>
+            <span style={{ fontSize: 15, fontWeight: 700, color: "#F0F4FF" }}>Confirm Swap</span>
+            <span style={{ fontSize: 11, fontFamily: "monospace", color: "#F3BA2F", background: "rgba(243,186,47,0.1)", padding: "2px 8px", borderRadius: 5 }}>SIMULATED</span>
+          </div>
           {(status === "idle" || status === "done") && (
             <button onClick={onClose} style={{ background: "none", border: "none", color: "#3D4F6B", cursor: "pointer", fontSize: 20, lineHeight: 1, padding: 0 }}>×</button>
           )}
@@ -184,7 +184,6 @@ function TxModal({ route, fromToken, toToken, amount, onClose }: { route: RouteR
                 );
               })}
             </div>
-
             {meta && (
               <div style={{ marginTop: 14, padding: "10px 14px", background: "rgba(6,8,16,0.6)", border: `1px solid ${meta.color}22`, borderRadius: 10, display: "flex", alignItems: "center", gap: 10 }}>
                 {status !== "done" && <div style={{ width: 13, height: 13, border: `2px solid ${meta.color}44`, borderTopColor: meta.color, borderRadius: "50%", animation: "mmSpin 0.8s linear infinite", flexShrink: 0 }} />}
@@ -202,7 +201,6 @@ function TxModal({ route, fromToken, toToken, amount, onClose }: { route: RouteR
           <button onClick={simulate} style={{ width: "100%", padding: 15, borderRadius: 14, background: "#00E5FF", color: "#060810", border: "none", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
             Confirm Swap · Simulated
           </button>
-          
         )}
         {status === "done" && (
           <button onClick={onClose} style={{ width: "100%", padding: 15, borderRadius: 14, background: "transparent", color: "#00E5FF", border: "1px solid rgba(0,229,255,0.3)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
@@ -232,11 +230,12 @@ export function SwapInterface() {
   const [selectedRoute, setSelectedRoute] = useState<RouteResult | null>(null);
   const [routesVisible, setRoutesVisible] = useState(false);
   const [showTx, setShowTx]       = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
   const swap = useSwapExecution();
 
   const fromTokens = SUPPORTED_TOKENS[fromChain.id] ?? [];
   const toTokens   = SUPPORTED_TOKENS[toChain.id]   ?? [];
-  const reset = () => { setRoutes([]); setSelectedRoute(null); setRoutesVisible(false); };
+  const reset = () => { setRoutes([]); setSelectedRoute(null); setRoutesVisible(false); setShowDetails(false); };
 
   const switchChains = () => {
     const [fc, tc, ft, tt] = [fromChain, toChain, fromToken, toToken];
@@ -251,7 +250,9 @@ export function SwapInterface() {
       const result = await getRoutes({ fromChainId: fromChain.id, toChainId: toChain.id, fromTokenAddress: fromToken.address, toTokenAddress: toToken.address, fromAmount, fromAddress: address });
       if (result.length === 0) setError("No routes found. Try a different amount or pair.");
       else { setRoutes(result); setSelectedRoute(result[0]); setTimeout(() => setRoutesVisible(true), 50); }
-    } catch { setError("Could not fetch routes. Check your connection."); }
+    } catch (e: any) {
+      setError(e?.message ?? "Could not fetch routes. Check your connection.");
+    }
     finally { setLoading(false); }
   };
 
@@ -273,29 +274,30 @@ export function SwapInterface() {
       <style>{`@keyframes mmSpin{to{transform:rotate(360deg)}}@keyframes mmPulse{0%,100%{opacity:1}50%{opacity:0.4}}@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}`}</style>
 
       {swap.step !== "idle" && swap.step !== "done" && swap.step !== "failed" && (
-  <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 24 }}>
-    <div style={{ width: "100%", maxWidth: 420, background: "#0D1117", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 24, boxShadow: "0 32px 80px rgba(0,0,0,0.7)" }}>
-      <div style={{ fontSize: 15, fontWeight: 700, color: "#F0F4FF", marginBottom: 16 }}>Executing Swap</div>
-      <div style={{ fontSize: 13, color: "#A0B0C8", fontFamily: "monospace" }}>
-        {swap.step === "approving" && "Approve token in wallet..."}
-        {swap.step === "waiting-approval" && "Waiting for approval..."}
-        {swap.step === "sending" && "Confirm swap in wallet..."}
-        {swap.step === "waiting-tx" && "Waiting for confirmation..."}
-        {swap.step === "polling" && "Bridge transfer in progress..."}
-      </div>
-      {swap.txHash && <div style={{ fontSize: 11, color: "#3D4F6B", fontFamily: "monospace", marginTop: 8, wordBreak: "break-all" }}>{swap.txHash}</div>}
-    </div>
-  </div>
-)}
-{swap.step === "done" && (
-  <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 24 }}>
-    <div style={{ width: "100%", maxWidth: 420, background: "#0D1117", border: "1px solid rgba(0,229,255,0.3)", borderRadius: 20, padding: 24 }}>
-      <div style={{ fontSize: 15, fontWeight: 700, color: "#00E5FF", marginBottom: 8 }}>Swap Complete</div>
-      {swap.explorerLink && <a href={swap.explorerLink} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: "#00E5FF", fontFamily: "monospace" }}>View on LI.FI Explorer</a>}
-      <button onClick={swap.reset} style={{ width: "100%", marginTop: 16, padding: 14, borderRadius: 12, background: "transparent", color: "#00E5FF", border: "1px solid rgba(0,229,255,0.3)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Done</button>
-    </div>
-  </div>
-)}
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 24 }}>
+          <div style={{ width: "100%", maxWidth: 420, background: "#0D1117", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 24, boxShadow: "0 32px 80px rgba(0,0,0,0.7)" }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#F0F4FF", marginBottom: 16 }}>Executing Swap</div>
+            <div style={{ fontSize: 13, color: "#A0B0C8", fontFamily: "monospace" }}>
+              {swap.step === "approving" && "Approve token in wallet..."}
+              {swap.step === "waiting-approval" && "Waiting for approval..."}
+              {swap.step === "sending" && "Confirm swap in wallet..."}
+              {swap.step === "waiting-tx" && "Waiting for confirmation..."}
+              {swap.step === "polling" && "Bridge transfer in progress..."}
+            </div>
+            {swap.txHash && <div style={{ fontSize: 11, color: "#3D4F6B", fontFamily: "monospace", marginTop: 8, wordBreak: "break-all" }}>{swap.txHash}</div>}
+          </div>
+        </div>
+      )}
+
+      {swap.step === "done" && (
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 24 }}>
+          <div style={{ width: "100%", maxWidth: 420, background: "#0D1117", border: "1px solid rgba(0,229,255,0.3)", borderRadius: 20, padding: 24 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#00E5FF", marginBottom: 8 }}>Swap Complete</div>
+            {swap.explorerLink && <a href={swap.explorerLink} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: "#00E5FF", fontFamily: "monospace" }}>View on LI.FI Explorer</a>}
+            <button onClick={swap.reset} style={{ width: "100%", marginTop: 16, padding: 14, borderRadius: 12, background: "transparent", color: "#00E5FF", border: "1px solid rgba(0,229,255,0.3)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Done</button>
+          </div>
+        </div>
+      )}
 
       {showTx && selectedRoute && (
         <TxModal route={selectedRoute} fromToken={fromToken} toToken={toToken} amount={amount} onClose={() => setShowTx(false)} />
@@ -342,14 +344,50 @@ export function SwapInterface() {
                 </div>
                 <TokenDropdown value={toToken} tokens={toTokens} onChange={t => { setToToken(t); reset(); }} />
               </div>
+
+              {/* Simplified summary — always visible when route found */}
               {selectedRoute && (
-                <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid rgba(255,255,255,0.04)", display: "flex", gap: 16 }}>
-                  {[["FEE", `$${parseFloat(selectedRoute.gasCostUSD || "0").toFixed(2)}`], ["TIME", fmtTime(selectedRoute.executionDuration)], ["VALUE", `~$${parseFloat(selectedRoute.toAmountUSD || "0").toFixed(2)}`]].map(([l, v]) => (
-                    <div key={l}>
-                      <div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1 }}>{l}</div>
-                      <div style={{ fontSize: 12, fontFamily: "monospace", color: "#A0B0C8", marginTop: 2 }}>{v}</div>
+                <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div style={{ display: "flex", gap: 12 }}>
+                      <div>
+                        <div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1 }}>FEE</div>
+                        <div style={{ fontSize: 12, fontFamily: "monospace", color: "#A0B0C8", marginTop: 2 }}>${parseFloat(selectedRoute.gasCostUSD || "0").toFixed(2)}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1 }}>TIME</div>
+                        <div style={{ fontSize: 12, fontFamily: "monospace", color: "#A0B0C8", marginTop: 2 }}>{fmtTime(selectedRoute.executionDuration)}</div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1 }}>RISK</div>
+                        <div style={{ fontSize: 12, fontFamily: "monospace", color: getRiskLabel(selectedRoute.tags).color, marginTop: 2 }}>{getRiskLabel(selectedRoute.tags).label}</div>
+                      </div>
                     </div>
-                  ))}
+                    {/* Details toggle */}
+                    <button onClick={() => setShowDetails(d => !d)} style={{ fontSize: 11, fontFamily: "monospace", color: "#3D4F6B", background: "none", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 6, padding: "3px 8px", cursor: "pointer" }}>
+                      {showDetails ? "Hide details ▲" : "Details ▾"}
+                    </button>
+                  </div>
+
+                  {/* Expanded details */}
+                  {showDetails && (
+                    <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.04)" }}>
+                      <div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1, marginBottom: 6 }}>ROUTE</div>
+                      {selectedRoute.steps?.length > 0 && (
+                        <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 8 }}>
+                          {selectedRoute.steps.map((s, si) => (
+                            <span key={si} style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", padding: "2px 8px", borderRadius: 5 }}>{s.tool}</span>
+                          ))}
+                        </div>
+                      )}
+                      <div style={{ display: "flex", gap: 12 }}>
+                        <div>
+                          <div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1 }}>VALUE OUT</div>
+                          <div style={{ fontSize: 12, fontFamily: "monospace", color: "#A0B0C8", marginTop: 2 }}>~${parseFloat(selectedRoute.toAmountUSD || "0").toFixed(2)}</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -375,44 +413,8 @@ export function SwapInterface() {
 
           {!loading && routes.length > 0 && (
             <div style={{ marginTop: 12 }}>
-              <div style={{ fontSize: 11, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 8 }}>{routes.length} route{routes.length > 1 ? "s" : ""} found</div>
-              {routes.slice(0, 3).map((route, i) => {
-                const risk = getRiskLabel(route.tags);
-                const isActive = selectedRoute?.id === route.id;
-                return (
-                  <button key={route.id} onClick={() => setSelectedRoute(route)} style={{ display: "block", width: "100%", textAlign: "left", background: "rgba(13,17,23,0.9)", border: `1px solid ${isActive ? "rgba(0,229,255,0.3)" : "rgba(255,255,255,0.05)"}`, borderRadius: 14, padding: "14px 16px", cursor: "pointer", marginBottom: 6, boxShadow: isActive ? "0 0 20px rgba(0,229,255,0.06)" : "none", opacity: routesVisible ? 1 : 0, transform: routesVisible ? "translateY(0)" : "translateY(8px)", transition: `opacity 0.3s ease ${i * 60}ms, transform 0.3s ease ${i * 60}ms` }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-                      <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                        <span style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B" }}>{i === 0 ? "BEST" : `#${i + 1}`}</span>
-                        <span style={{ fontSize: 10, fontFamily: "monospace", color: risk.color, background: `${risk.color}12`, padding: "2px 8px", borderRadius: 5, fontWeight: 600 }}>{risk.label}</span>
-                      </div>
-                      <span style={{ fontSize: 11, fontFamily: "monospace", color: "#3D4F6B" }}>{fmtTime(route.executionDuration)}</span>
-                    </div>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
-                      <div>
-                        <div style={{ fontSize: 18, fontWeight: 700, color: "#F0F4FF", display: "flex", alignItems: "center", gap: 6 }}>
-                          <Img src={TOKEN_LOGOS[toToken.symbol] ?? ""} size={20} />
-                          {fmt(route.toAmount, toToken.decimals)} {toToken.symbol}
-                        </div>
-                        <div style={{ fontSize: 11, color: "#3D4F6B", fontFamily: "monospace", marginTop: 2 }}>~${parseFloat(route.toAmountUSD || "0").toFixed(2)}</div>
-                      </div>
-                      <div style={{ textAlign: "right" }}>
-                        <div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B" }}>Gas</div>
-                        <div style={{ fontSize: 12, fontFamily: "monospace", color: "#A0B0C8" }}>${parseFloat(route.gasCostUSD || "0").toFixed(2)}</div>
-                      </div>
-                    </div>
-                    {route.steps?.length > 0 && (
-                      <div style={{ display: "flex", gap: 4, marginTop: 10, flexWrap: "wrap" }}>
-                        {route.steps.map((s, si) => (
-                          <span key={si} style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.05)", padding: "2px 8px", borderRadius: 5 }}>{s.tool}</span>
-                        ))}
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-              <button onClick={() => { if (address && selectedRoute?.transactionRequest) { swap.execute(selectedRoute); } else { setShowTx(true); } }} style={{ width: "100%", marginTop: 8, padding: 15, borderRadius: 14, background: "transparent", color: "#00E5FF", border: "1px solid rgba(0,229,255,0.25)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
-                {address ? "Confirm Swap" : "Connect Wallet to Swap"}
+              <button onClick={() => { if (address && selectedRoute?.transactionRequest) { swap.execute(selectedRoute); } else { setShowTx(true); } }} style={{ width: "100%", padding: 15, borderRadius: 14, background: "#00E5FF", color: "#060810", border: "none", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
+                {address ? "Swap Now" : "Connect Wallet to Swap"}
               </button>
             </div>
           )}
