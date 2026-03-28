@@ -1,10 +1,10 @@
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
-import { mainnet, polygon, bsc } from "wagmi/chains";
+import { mainnet, polygon, bsc, sepolia } from "wagmi/chains";
 
 export const config = getDefaultConfig({
   appName: "MultiMesh",
   projectId: "29975bd3e0414e493cdfa9979d53cd40",
-  chains: [mainnet, polygon, bsc],
+  chains: [mainnet, polygon, bsc, sepolia],
   ssr: true,
 });
 
@@ -12,6 +12,7 @@ export const SUPPORTED_CHAINS = [
   { id: 1,   name: "Ethereum", symbol: "ETH", logo: "⟠", color: "#627EEA" },
   { id: 137, name: "Polygon",  symbol: "MATIC", logo: "⬡", color: "#8247E5" },
   { id: 56,  name: "BNB Chain", symbol: "BNB", logo: "◈", color: "#F3BA2F" },
+  { id: 11155111, name: "Sepolia", symbol: "ETH", logo: "⟠", color: "#627EEA" },
 ];
 
 export const SUPPORTED_TOKENS: Record<number, Token[]> = {
@@ -31,7 +32,12 @@ export const SUPPORTED_TOKENS: Record<number, Token[]> = {
     { symbol: "USDC", name: "USD Coin",   address: "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d", decimals: 18, logo: "◎" },
     { symbol: "USDT", name: "Tether",     address: "0x55d398326f99059fF775485246999027B3197955", decimals: 18, logo: "₮" },
   ],
+
+  11155111: [
+    { symbol: "ETH", name: "Sepolia ETH", address: "0x0000000000000000000000000000000000000000", decimals: 18, logo: "⟠" },
+  ],
 };
+
 
 export interface Token {
   symbol: string;
