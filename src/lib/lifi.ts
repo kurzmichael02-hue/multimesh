@@ -9,6 +9,7 @@ export interface RouteRequest {
 
 export interface RouteResult {
   id: string;
+  tool: string;
   fromAmount: string;
   toAmount: string;
   toAmountUSD: string;
@@ -16,6 +17,30 @@ export interface RouteResult {
   executionDuration: number;
   steps: RouteStep[];
   tags: string[];
+  // real execution fields
+  action?: {
+    fromToken: { address: string; symbol: string; decimals: number; chainId: number };
+    toToken: { address: string; symbol: string; decimals: number; chainId: number };
+    fromAmount: string;
+    fromChainId: number;
+    toChainId: number;
+  };
+  estimate?: {
+    fromAmount: string;
+    toAmount: string;
+    approvalAddress: string;
+    executionDuration: number;
+    gasCosts: { amountUSD: string }[];
+  };
+  transactionRequest?: {
+    to: string;
+    data: string;
+    value: string;
+    gasLimit: string;
+    gasPrice: string;
+    chainId: number;
+    from: string;
+  };
 }
 
 export interface RouteStep {
@@ -46,7 +71,6 @@ export async function getRoutes(req: RouteRequest): Promise<RouteResult[]> {
 
   const data = await res.json();
 
-  // handle LI.FI specific errors
   if (!res.ok) {
     const code = data?.code;
     if (code === "AMOUNT_TOO_HIGH") throw new Error("Amount too high — try a smaller value.");
@@ -56,10 +80,11 @@ export async function getRoutes(req: RouteRequest): Promise<RouteResult[]> {
     throw new Error(data?.message ?? "Could not fetch routes.");
   }
 
-  if (!data.estimate) throw new Error("No route found for this pair. Try different tokens or chains.");
+  if (!data.estimate) throw new Error("No route found for this pair.");
 
   const route: RouteResult = {
     id: data.id ?? "quote",
+    tool: data.tool ?? data.toolDetails?.key ?? "unknown",
     fromAmount: data.estimate.fromAmount,
     toAmount: data.estimate.toAmount,
     toAmountUSD: data.estimate.toAmountUSD ?? "0",
@@ -67,6 +92,10 @@ export async function getRoutes(req: RouteRequest): Promise<RouteResult[]> {
     executionDuration: data.estimate.executionDuration ?? 0,
     steps: data.includedSteps ?? [],
     tags: ["RECOMMENDED"],
+    // pass through full objects needed for real execution
+    action: data.action,
+    estimate: data.estimate,
+    transactionRequest: data.transactionRequest,
   };
 
   return [route];

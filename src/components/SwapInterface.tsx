@@ -5,6 +5,7 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { SUPPORTED_CHAINS, SUPPORTED_TOKENS, Token } from "@/lib/wagmi";
 import { getRoutes, getRiskLabel, RouteResult } from "@/lib/lifi";
 import { ethers } from "ethers";
+import { useSwapExecution } from "@/hooks/useSwapExecution";
 
 const TOKEN_LOGOS: Record<string, string> = {
   ETH:   "https://assets.coingecko.com/coins/images/279/small/ethereum.png",
@@ -231,6 +232,7 @@ export function SwapInterface() {
   const [selectedRoute, setSelectedRoute] = useState<RouteResult | null>(null);
   const [routesVisible, setRoutesVisible] = useState(false);
   const [showTx, setShowTx]       = useState(false);
+  const swap = useSwapExecution();
 
   const fromTokens = SUPPORTED_TOKENS[fromChain.id] ?? [];
   const toTokens   = SUPPORTED_TOKENS[toChain.id]   ?? [];
@@ -269,6 +271,31 @@ export function SwapInterface() {
   return (
     <>
       <style>{`@keyframes mmSpin{to{transform:rotate(360deg)}}@keyframes mmPulse{0%,100%{opacity:1}50%{opacity:0.4}}@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}`}</style>
+
+      {swap.step !== "idle" && swap.step !== "done" && swap.step !== "failed" && (
+  <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 24 }}>
+    <div style={{ width: "100%", maxWidth: 420, background: "#0D1117", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 24, boxShadow: "0 32px 80px rgba(0,0,0,0.7)" }}>
+      <div style={{ fontSize: 15, fontWeight: 700, color: "#F0F4FF", marginBottom: 16 }}>Executing Swap</div>
+      <div style={{ fontSize: 13, color: "#A0B0C8", fontFamily: "monospace" }}>
+        {swap.step === "approving" && "Approve token in wallet..."}
+        {swap.step === "waiting-approval" && "Waiting for approval..."}
+        {swap.step === "sending" && "Confirm swap in wallet..."}
+        {swap.step === "waiting-tx" && "Waiting for confirmation..."}
+        {swap.step === "polling" && "Bridge transfer in progress..."}
+      </div>
+      {swap.txHash && <div style={{ fontSize: 11, color: "#3D4F6B", fontFamily: "monospace", marginTop: 8, wordBreak: "break-all" }}>{swap.txHash}</div>}
+    </div>
+  </div>
+)}
+{swap.step === "done" && (
+  <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 24 }}>
+    <div style={{ width: "100%", maxWidth: 420, background: "#0D1117", border: "1px solid rgba(0,229,255,0.3)", borderRadius: 20, padding: 24 }}>
+      <div style={{ fontSize: 15, fontWeight: 700, color: "#00E5FF", marginBottom: 8 }}>Swap Complete</div>
+      {swap.explorerLink && <a href={swap.explorerLink} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: "#00E5FF", fontFamily: "monospace" }}>View on LI.FI Explorer</a>}
+      <button onClick={swap.reset} style={{ width: "100%", marginTop: 16, padding: 14, borderRadius: 12, background: "transparent", color: "#00E5FF", border: "1px solid rgba(0,229,255,0.3)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Done</button>
+    </div>
+  </div>
+)}
 
       {showTx && selectedRoute && (
         <TxModal route={selectedRoute} fromToken={fromToken} toToken={toToken} amount={amount} onClose={() => setShowTx(false)} />
@@ -384,8 +411,8 @@ export function SwapInterface() {
                   </button>
                 );
               })}
-              <button onClick={() => setShowTx(true)} style={{ width: "100%", marginTop: 8, padding: 15, borderRadius: 14, background: "transparent", color: "#00E5FF", border: "1px solid rgba(0,229,255,0.25)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
-                {address ? "Confirm Swap · Simulated" : "Connect Wallet to Swap"}
+              <button onClick={() => { if (address && selectedRoute?.transactionRequest) { swap.execute(selectedRoute); } else { setShowTx(true); } }} style={{ width: "100%", marginTop: 8, padding: 15, borderRadius: 14, background: "transparent", color: "#00E5FF", border: "1px solid rgba(0,229,255,0.25)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+                {address ? "Confirm Swap" : "Connect Wallet to Swap"}
               </button>
             </div>
           )}
