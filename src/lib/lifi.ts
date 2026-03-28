@@ -17,7 +17,6 @@ export interface RouteResult {
   executionDuration: number;
   steps: RouteStep[];
   tags: string[];
-  // real execution fields
   action?: {
     fromToken: { address: string; symbol: string; decimals: number; chainId: number };
     toToken: { address: string; symbol: string; decimals: number; chainId: number };
@@ -54,6 +53,12 @@ export interface RouteStep {
   };
 }
 
+// MultiMesh protocol fee: 15 bps (0.15%)
+// Fee is collected via LI.FI's integrator fee parameter
+// Wallet receives the fee on every swap
+const MULTIMESH_FEE_BPS = 15;
+const MULTIMESH_FEE_WALLET = "0x552008c0f6870c2f77e5cC1d2eb9bdff03e30Ea0";
+
 export async function getRoutes(req: RouteRequest): Promise<RouteResult[]> {
   const params = new URLSearchParams({
     fromChain: String(req.fromChainId),
@@ -61,8 +66,11 @@ export async function getRoutes(req: RouteRequest): Promise<RouteResult[]> {
     fromToken: req.fromTokenAddress,
     toToken: req.toTokenAddress,
     fromAmount: req.fromAmount,
-    fromAddress: req.fromAddress ?? "0x552008c0f6870c2f77e5cC1d2eb9bdff03e30Ea0",
+    fromAddress: req.fromAddress ?? MULTIMESH_FEE_WALLET,
     slippage: "0.03",
+    // LI.FI integrator fee — collected on every swap to our wallet
+    integrator: "multimesh",
+    fee: String(MULTIMESH_FEE_BPS / 10000), // LI.FI expects decimal (0.0015)
   });
 
   const res = await fetch(`https://li.quest/v1/quote?${params}`, {
@@ -92,7 +100,6 @@ export async function getRoutes(req: RouteRequest): Promise<RouteResult[]> {
     executionDuration: data.estimate.executionDuration ?? 0,
     steps: data.includedSteps ?? [],
     tags: ["RECOMMENDED"],
-    // pass through full objects needed for real execution
     action: data.action,
     estimate: data.estimate,
     transactionRequest: data.transactionRequest,
