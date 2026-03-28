@@ -64,6 +64,9 @@ export function useSwapExecution() {
         }
       }
 
+      const { switchChain } = await import("@wagmi/core").then(m => m);
+      await switchChain(config, { chainId: transactionRequest.chainId });
+
       // Step 2: Send swap transaction
       setState(s => ({ ...s, step: "sending" }));
       const txHash = await sendTransaction(config, {
