@@ -231,6 +231,7 @@ export function SwapInterface() {
   const [routesVisible, setRoutesVisible] = useState(false);
   const [showTx, setShowTx]       = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [showBanner, setShowBanner] = useState(true);
   const swap = useSwapExecution();
 
   const fromTokens = SUPPORTED_TOKENS[fromChain.id] ?? [];
@@ -305,6 +306,12 @@ const S = {
       )}
 
       <div style={S.page}>
+        {showBanner && (
+  <div style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 300, background: "rgba(243,186,47,0.08)", borderBottom: "1px solid rgba(243,186,47,0.15)", padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+    <span style={{ fontSize: 12, fontFamily: "monospace", color: "#F3BA2F" }}>⚠ MultiMesh is in beta. Use small amounts and proceed with caution.</span>
+    <button onClick={() => setShowBanner(false)} style={{ background: "none", border: "none", color: "#3D4F6B", cursor: "pointer", fontSize: 16, padding: 0, marginLeft: 12 }}>×</button>
+  </div>
+)}
         <div style={{ position: "fixed", top: -200, left: -200, width: 600, height: 600, background: "radial-gradient(circle,rgba(0,229,255,0.04) 0%,transparent 70%)", pointerEvents: "none" }} />
         <div style={{ position: "fixed", bottom: -200, right: -200, width: 500, height: 500, background: "radial-gradient(circle,rgba(123,97,255,0.04) 0%,transparent 70%)", pointerEvents: "none" }} />
         <div style={{ position: "fixed", inset: 0, backgroundImage: "linear-gradient(rgba(0,229,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,0.025) 1px,transparent 1px)", backgroundSize: "48px 48px", pointerEvents: "none" }} />
