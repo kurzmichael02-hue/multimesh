@@ -69,7 +69,8 @@ export async function getRoutes(req: RouteRequest): Promise<RouteResult[]> {
     fromAddress: req.fromAddress ?? MULTIMESH_FEE_WALLET,
     slippage: "0.03",
     // LI.FI integrator fee — collected on every swap to our wallet
-    
+    integrator: "multimesh",
+    fee: "0.0015",
   });
 
   const res = await fetch(`https://li.quest/v1/quote?${params}`, {
