@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SwapInterface } from "@/components/SwapInterface";
 
 const STATS = [
@@ -26,8 +26,51 @@ const FEATURES = [
   },
 ];
 
+const FAQS = [
+  {
+    q: "What is MultiMesh?",
+    a: "MultiMesh is a cross-chain swap aggregator. It finds the best route to swap tokens across different blockchains in a single transaction — no manual bridging required.",
+  },
+  {
+    q: "Which chains are supported?",
+    a: "Ethereum, Polygon, BNB Chain, Arbitrum, and Optimism. More chains will be added as the platform grows.",
+  },
+  {
+    q: "How does MultiMesh find the best route?",
+    a: "We use LI.FI's routing engine which scans 20+ bridges and 8+ DEX aggregators simultaneously to find the optimal path based on output amount, fees, and execution time.",
+  },
+  {
+    q: "Is MultiMesh non-custodial?",
+    a: "Yes. MultiMesh never holds your funds. All swaps execute directly between your wallet and smart contracts. You retain full control of your assets at all times.",
+  },
+  {
+    q: "What fees does MultiMesh charge?",
+    a: "MultiMesh charges a 0.15% protocol fee on each swap. This is collected automatically. Network gas fees apply separately and vary by chain.",
+  },
+  {
+    q: "Is it safe to use during beta?",
+    a: "The core infrastructure is battle-tested — LI.FI processes billions in volume. However MultiMesh itself is in beta. Start with small amounts and verify every transaction before confirming.",
+  },
+  {
+    q: "Can I swap any token?",
+    a: "Any token with liquidity on a supported DEX can be swapped. Paste any contract address into the token selector and MultiMesh will search for available routes.",
+  },
+];
+
 export default function Home() {
   const [showApp, setShowApp] = useState(false);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [cookieAccepted, setCookieAccepted] = useState(true);
+
+  useEffect(() => {
+    const consent = localStorage.getItem("mm_cookie_consent");
+    if (!consent) setCookieAccepted(false);
+  }, []);
+
+  const acceptCookies = () => {
+    localStorage.setItem("mm_cookie_consent", "true");
+    setCookieAccepted(true);
+  };
 
   if (showApp) return (
     <div style={{ position: "relative" }}>
@@ -57,9 +100,8 @@ export default function Home() {
       overflow: "hidden",
     }}>
       <style>{`
-        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
-        @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
         @keyframes slideUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes slideUpFast { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
         .hero-title { animation: slideUp 0.7s ease forwards; }
         .hero-sub { animation: slideUp 0.7s ease 0.15s both; }
         .hero-cta { animation: slideUp 0.7s ease 0.3s both; }
@@ -69,7 +111,33 @@ export default function Home() {
         .cta-btn { transition: background 0.2s, transform 0.15s, box-shadow 0.2s; }
         .cta-btn:hover { background: #00F5FF !important; transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,229,255,0.3); }
         .cta-btn:active { transform: translateY(0); }
+        .faq-item { transition: border-color 0.2s; }
+        .faq-item:hover { border-color: rgba(0,229,255,0.12) !important; }
       `}</style>
+
+      {/* Cookie consent banner */}
+      {!cookieAccepted && (
+        <div style={{
+          position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 500,
+          background: "rgba(13,17,23,0.98)", borderTop: "1px solid rgba(255,255,255,0.06)",
+          padding: "16px 24px", display: "flex", alignItems: "center", justifyContent: "space-between",
+          gap: 16, flexWrap: "wrap", backdropFilter: "blur(12px)",
+          animation: "slideUpFast 0.3s ease forwards",
+        }}>
+          <div style={{ fontSize: 12, color: "#A0B0C8", maxWidth: 600 }}>
+            We use analytics cookies to understand how users interact with MultiMesh and improve the product.
+            By clicking Accept you agree to our <a href="/privacy" style={{ color: "#00E5FF", textDecoration: "none" }}>Privacy Policy</a>.
+          </div>
+          <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+            <button onClick={acceptCookies} style={{ padding: "8px 20px", borderRadius: 9, background: "#00E5FF", color: "#060810", border: "none", fontWeight: 700, fontSize: 12, cursor: "pointer" }}>
+              Accept
+            </button>
+            <button onClick={acceptCookies} style={{ padding: "8px 20px", borderRadius: 9, background: "transparent", color: "#3D4F6B", border: "1px solid rgba(255,255,255,0.07)", fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
+              Decline
+            </button>
+          </div>
+        </div>
+      )}
 
       <div style={{ position: "fixed", top: -300, left: -300, width: 800, height: 800, background: "radial-gradient(circle,rgba(0,229,255,0.05) 0%,transparent 65%)", pointerEvents: "none" }} />
       <div style={{ position: "fixed", bottom: -300, right: -300, width: 700, height: 700, background: "radial-gradient(circle,rgba(123,97,255,0.05) 0%,transparent 65%)", pointerEvents: "none" }} />
@@ -145,7 +213,33 @@ export default function Home() {
         </div>
       </section>
 
-      <section style={{ position: "relative", zIndex: 1, textAlign: "center", padding: "0 24px 80px" }}>
+      {/* FAQ */}
+      <section style={{ position: "relative", zIndex: 1, maxWidth: 680, margin: "0 auto", padding: "0 24px 80px" }}>
+        <div style={{ textAlign: "center", marginBottom: 40 }}>
+          <div style={{ fontSize: 11, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 2, marginBottom: 12 }}>FAQ</div>
+          <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: -0.5 }}>Common questions.</div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {FAQS.map((faq, i) => (
+            <div key={i} className="faq-item" style={{ background: "rgba(13,17,23,0.95)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 14, overflow: "hidden" }}>
+              <button
+                onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                style={{ width: "100%", padding: "16px 20px", background: "none", border: "none", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}
+              >
+                <span style={{ fontSize: 14, fontWeight: 600, color: "#F0F4FF", textAlign: "left" }}>{faq.q}</span>
+                <span style={{ color: "#3D4F6B", fontSize: 16, flexShrink: 0, transition: "transform 0.2s", transform: openFaq === i ? "rotate(45deg)" : "none" }}>+</span>
+              </button>
+              {openFaq === i && (
+                <div style={{ padding: "0 20px 16px", fontSize: 13, color: "#6B7FA3", lineHeight: 1.7 }}>
+                  {faq.a}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section style={{ position: "relative", zIndex: 1, textAlign: "center", padding: "0 24px 100px" }}>
         <div style={{ maxWidth: 480, margin: "0 auto", padding: 36, background: "rgba(13,17,23,0.95)", border: "1px solid rgba(0,229,255,0.1)", borderRadius: 20 }}>
           <div style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>Ready to swap?</div>
           <div style={{ fontSize: 13, color: "#6B7FA3", marginBottom: 24 }}>Connect your wallet and find the best route in seconds.</div>
