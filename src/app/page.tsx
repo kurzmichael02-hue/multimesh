@@ -255,6 +255,8 @@ export default function Home() {
           <a href="/privacy" style={{ color: "#3D4F6B", textDecoration: "none" }}>Privacy Policy</a>
           &nbsp;·&nbsp;
           <a href="/terms" style={{ color: "#3D4F6B", textDecoration: "none" }}>Terms of Service</a>
+          &nbsp;·&nbsp;
+<a href="https://t.me/multi_mesh" target="_blank" rel="noopener noreferrer" style={{ color: "#3D4F6B", textDecoration: "none" }}>Telegram</a>
         </div>
       </footer>
     </div>
