@@ -76,10 +76,38 @@ function ChainDropdown({ value, onChange }: { value: typeof SUPPORTED_CHAINS[0];
   );
 }
 
-function TokenDropdown({ value, tokens, onChange }: { value: Token; tokens: Token[]; onChange: (t: Token) => void }) {
+function TokenDropdown({ value, tokens, onChange, chainId }: { value: Token; tokens: Token[]; onChange: (t: Token) => void; chainId: number }) {
   const [open, setOpen] = useState(false);
+  const [customAddress, setCustomAddress] = useState("");
+  const [customLoading, setCustomLoading] = useState(false);
+  const [customError, setCustomError] = useState("");
   const ref = useRef<HTMLDivElement>(null!);
-  useOutsideClick(ref, () => setOpen(false));
+  useOutsideClick(ref, () => { setOpen(false); setCustomAddress(""); setCustomError(""); });
+
+  const handleCustomToken = async () => {
+    if (!customAddress || customAddress.length < 10) return;
+    setCustomLoading(true);
+    setCustomError("");
+    try {
+      const res = await fetch(`https://li.quest/v1/token?chain=${chainId}&token=${customAddress}`);
+      if (!res.ok) throw new Error("Token not found");
+      const data = await res.json();
+      const token: Token = {
+        symbol: data.symbol ?? "???",
+        name: data.name ?? customAddress.slice(0, 8),
+        address: customAddress,
+        decimals: data.decimals ?? 18,
+        logo: "",
+      };
+      onChange(token);
+      setOpen(false);
+      setCustomAddress("");
+    } catch {
+      setCustomError("Token not found on this chain");
+    }
+    setCustomLoading(false);
+  };
+
   return (
     <div ref={ref} style={{ position: "relative" }}>
       <button onClick={() => setOpen(o => !o)} style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "7px 10px 7px 8px", cursor: "pointer", whiteSpace: "nowrap" }}>
@@ -88,9 +116,9 @@ function TokenDropdown({ value, tokens, onChange }: { value: Token; tokens: Toke
         <span style={{ fontSize: 9, color: "#3D4F6B" }}>▾</span>
       </button>
       {open && (
-        <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, background: "#0D1117", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: 6, zIndex: 100, minWidth: 180, boxShadow: "0 16px 40px rgba(0,0,0,0.6)" }}>
+        <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, background: "#0D1117", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: 6, zIndex: 100, minWidth: 220, boxShadow: "0 16px 40px rgba(0,0,0,0.6)" }}>
           {tokens.map(t => (
-            <button key={t.address} onClick={() => { onChange(t); setOpen(false); }}
+            <button key={t.address} onClick={() => { onChange(t); setOpen(false); setCustomAddress(""); setCustomError(""); }}
               style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "8px 10px", background: t.address === value.address ? "rgba(0,229,255,0.06)" : "transparent", border: "none", borderRadius: 8, cursor: "pointer" }}>
               <Img src={TOKEN_LOGOS[t.symbol] ?? ""} size={24} />
               <div style={{ textAlign: "left" }}>
@@ -99,6 +127,22 @@ function TokenDropdown({ value, tokens, onChange }: { value: Token; tokens: Toke
               </div>
             </button>
           ))}
+          <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", marginTop: 6, paddingTop: 8, padding: "8px 6px 4px" }}>
+            <div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1, marginBottom: 6 }}>PASTE CONTRACT ADDRESS</div>
+            <div style={{ display: "flex", gap: 6 }}>
+              <input
+                value={customAddress}
+                onChange={e => { setCustomAddress(e.target.value); setCustomError(""); }}
+                onKeyDown={e => e.key === "Enter" && handleCustomToken()}
+                placeholder="0x..."
+                style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "6px 8px", fontSize: 11, fontFamily: "monospace", color: "#F0F4FF", outline: "none", minWidth: 0 }}
+              />
+              <button onClick={handleCustomToken} disabled={customLoading} style={{ padding: "6px 10px", borderRadius: 8, background: customLoading ? "#1C2333" : "rgba(0,229,255,0.1)", border: "1px solid rgba(0,229,255,0.2)", color: "#00E5FF", fontSize: 11, cursor: customLoading ? "not-allowed" : "pointer", whiteSpace: "nowrap" }}>
+                {customLoading ? "..." : "Add"}
+              </button>
+            </div>
+            {customError && <div style={{ fontSize: 10, fontFamily: "monospace", color: "#FC8181", marginTop: 4 }}>{customError}</div>}
+          </div>
         </div>
       )}
     </div>
@@ -143,7 +187,6 @@ function TxModal({ route, fromToken, toToken, amount, onClose }: { route: RouteR
             <button onClick={onClose} style={{ background: "none", border: "none", color: "#3D4F6B", cursor: "pointer", fontSize: 20, lineHeight: 1, padding: 0 }}>×</button>
           )}
         </div>
-
         <div style={{ background: "rgba(6,8,16,0.8)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, padding: "14px 16px", marginBottom: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
@@ -165,7 +208,6 @@ function TxModal({ route, fromToken, toToken, amount, onClose }: { route: RouteR
             ))}
           </div>
         </div>
-
         {status !== "idle" && (
           <div style={{ marginBottom: 20 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", position: "relative", padding: "0 4px" }}>
@@ -200,7 +242,6 @@ function TxModal({ route, fromToken, toToken, amount, onClose }: { route: RouteR
             )}
           </div>
         )}
-
         {status === "idle" && (
           <button onClick={simulate} style={{ width: "100%", padding: 15, borderRadius: 14, background: "#00E5FF", color: "#060810", border: "none", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
             Confirm Swap · Simulated
@@ -238,7 +279,6 @@ export function SwapInterface() {
   const [showBanner, setShowBanner] = useState(true);
   const swap = useSwapExecution();
 
-  // Wallet balance for the selected from token
   const isNativeToken = fromToken.address === "0x0000000000000000000000000000000000000000";
   const { data: balanceData } = useBalance({
     address,
@@ -286,7 +326,6 @@ export function SwapInterface() {
     <>
       <style>{`@keyframes mmSpin{to{transform:rotate(360deg)}}@keyframes mmPulse{0%,100%{opacity:1}50%{opacity:0.4}}@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}`}</style>
 
-      {/* Executing swap modal */}
       {swap.step !== "idle" && swap.step !== "done" && swap.step !== "failed" && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 24 }}>
           <div style={{ width: "100%", maxWidth: 420, background: "#0D1117", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 24, boxShadow: "0 32px 80px rgba(0,0,0,0.7)" }}>
@@ -303,7 +342,6 @@ export function SwapInterface() {
         </div>
       )}
 
-      {/* Swap complete modal */}
       {swap.step === "done" && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 24 }}>
           <div style={{ width: "100%", maxWidth: 420, background: "#0D1117", border: "1px solid rgba(0,229,255,0.3)", borderRadius: 20, padding: 24 }}>
@@ -314,7 +352,6 @@ export function SwapInterface() {
         </div>
       )}
 
-      {/* Swap failed modal */}
       {swap.step === "failed" && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 24 }}>
           <div style={{ width: "100%", maxWidth: 420, background: "#0D1117", border: "1px solid rgba(252,129,129,0.3)", borderRadius: 20, padding: 24 }}>
@@ -360,9 +397,8 @@ export function SwapInterface() {
               </div>
               <div style={S.row}>
                 <input style={S.input} type="number" placeholder="0.00" value={amount} onChange={e => { setAmount(e.target.value); reset(); }} />
-                <TokenDropdown value={fromToken} tokens={fromTokens} onChange={t => { setFromToken(t); reset(); }} />
+                <TokenDropdown value={fromToken} tokens={fromTokens} onChange={t => { setFromToken(t); reset(); }} chainId={fromChain.id} />
               </div>
-              {/* Wallet balance */}
               {address && balanceData && (
                 <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 6 }}>
                   <span style={{ fontSize: 11, fontFamily: "monospace", color: "#3D4F6B" }}>Balance:</span>
@@ -386,7 +422,7 @@ export function SwapInterface() {
                 <div style={{ flex: 1, fontSize: 28, fontWeight: 700, color: selectedRoute ? "#00E5FF" : "#1C2A3A" }}>
                   {selectedRoute ? fmt(selectedRoute.toAmount, toToken.decimals) : "0.00"}
                 </div>
-                <TokenDropdown value={toToken} tokens={toTokens} onChange={t => { setToToken(t); reset(); }} />
+                <TokenDropdown value={toToken} tokens={toTokens} onChange={t => { setToToken(t); reset(); }} chainId={toChain.id} />
               </div>
 
               {selectedRoute && (
@@ -410,7 +446,6 @@ export function SwapInterface() {
                       {showDetails ? "Hide ▲" : "Details ▾"}
                     </button>
                   </div>
-
                   {showDetails && (
                     <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.04)" }}>
                       <div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1, marginBottom: 6 }}>ROUTE</div>
