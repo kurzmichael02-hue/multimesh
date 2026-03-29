@@ -55,7 +55,8 @@ export interface RouteStep {
 
 const MULTIMESH_FEE_WALLET = "0x552008c0f6870c2f77e5cC1d2eb9bdff03e30Ea0";
 
-export async function getRoutes(req: RouteRequest): Promise<RouteResult[]> {
+// Primary: /v1/quote — fast, single best route
+async function fetchQuote(req: RouteRequest): Promise<RouteResult | null> {
   const params = new URLSearchParams({
     fromChain: String(req.fromChainId),
     toChain: String(req.toChainId),
@@ -63,9 +64,9 @@ export async function getRoutes(req: RouteRequest): Promise<RouteResult[]> {
     toToken: req.toTokenAddress,
     fromAmount: req.fromAmount,
     fromAddress: req.fromAddress ?? MULTIMESH_FEE_WALLET,
-    slippage: "0.05",               // 5% — better for meme coins and volatile tokens
-    maxPriceImpact: "0.5",          // 50% — allows low-liquidity token routes
-    allowDestinationCall: "true",   // enables swap on destination chain (key for any-to-any)
+    slippage: "0.05",
+    maxPriceImpact: "0.5",
+    allowDestinationCall: "true",
     integrator: "multimesh",
     fee: "0.0015",
   });
@@ -75,19 +76,9 @@ export async function getRoutes(req: RouteRequest): Promise<RouteResult[]> {
   });
 
   const data = await res.json();
+  if (!res.ok || !data.estimate) return null;
 
-  if (!res.ok) {
-    const code = data?.code;
-    if (code === "AMOUNT_TOO_HIGH") throw new Error("Amount too high — try a smaller value.");
-    if (code === "AMOUNT_TOO_LOW") throw new Error("Amount too low — try a larger value.");
-    if (code === "NO_POSSIBLE_ROUTE") throw new Error("No route found for this pair. Try different tokens or chains.");
-    if (code === "NOT_FOUND") throw new Error("Token or chain not supported.");
-    throw new Error(data?.message ?? "Could not fetch routes.");
-  }
-
-  if (!data.estimate) throw new Error("No route found for this pair.");
-
-  const route: RouteResult = {
+  return {
     id: data.id ?? "quote",
     tool: data.tool ?? data.toolDetails?.key ?? "unknown",
     fromAmount: data.estimate.fromAmount,
@@ -101,8 +92,72 @@ export async function getRoutes(req: RouteRequest): Promise<RouteResult[]> {
     estimate: data.estimate,
     transactionRequest: data.transactionRequest,
   };
+}
 
-  return [route];
+// Fallback: /v1/advanced/routes — broader coverage, finds routes /quote misses
+// Used for low-liquidity tokens and non-indexed BSC/chain tokens
+async function fetchAdvancedRoutes(req: RouteRequest): Promise<RouteResult | null> {
+  const body = {
+    fromChainId: req.fromChainId,
+    toChainId: req.toChainId,
+    fromTokenAddress: req.fromTokenAddress,
+    toTokenAddress: req.toTokenAddress,
+    fromAmount: req.fromAmount,
+    fromAddress: req.fromAddress ?? MULTIMESH_FEE_WALLET,
+    toAddress: req.fromAddress ?? MULTIMESH_FEE_WALLET,
+    options: {
+      slippage: 0.05,
+      maxPriceImpact: 0.5,
+      allowSwitchChain: true,
+      allowDestinationCall: true,
+      order: "CHEAPEST",
+      integrator: "multimesh",
+      fee: 0.0015,
+      bridges: { deny: [] },
+      exchanges: { deny: [] },
+    },
+  };
+
+  const res = await fetch("https://li.quest/v1/advanced/routes", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  const data = await res.json();
+  if (!res.ok || !data.routes?.length) return null;
+
+  const best = data.routes[0];
+  const firstStep = best.steps?.[0];
+  const lastStep = best.steps?.[best.steps.length - 1];
+
+  return {
+    id: best.id ?? "advanced",
+    tool: firstStep?.tool ?? "multihop",
+    fromAmount: best.fromAmount ?? firstStep?.estimate?.fromAmount ?? "0",
+    toAmount: best.toAmount ?? lastStep?.estimate?.toAmount ?? "0",
+    toAmountUSD: best.toAmountUSD ?? "0",
+    gasCostUSD: best.gasCostUSD ?? firstStep?.estimate?.gasCosts?.[0]?.amountUSD ?? "0",
+    executionDuration: best.steps?.reduce((sum: number, s: any) => sum + (s.estimate?.executionDuration ?? 0), 0) ?? 0,
+    steps: best.steps ?? [],
+    tags: ["RECOMMENDED"],
+    action: firstStep?.action,
+    estimate: firstStep?.estimate,
+    transactionRequest: firstStep?.transactionRequest,
+  };
+}
+
+export async function getRoutes(req: RouteRequest): Promise<RouteResult[]> {
+  // Try fast /quote first
+  const quote = await fetchQuote(req);
+  if (quote) return [quote];
+
+  // Fallback to /advanced/routes for broader token coverage
+  const advanced = await fetchAdvancedRoutes(req);
+  if (advanced) return [advanced];
+
+  // Both failed — throw meaningful error
+  throw new Error("No route found for this pair. The token may not be supported by any available bridge.");
 }
 
 export function getRiskLabel(tags: string[]): { label: string; color: string; score: number } {
