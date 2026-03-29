@@ -5,6 +5,7 @@ export interface RouteRequest {
   toTokenAddress: string;
   fromAmount: string;
   fromAddress?: string;
+slippage?: number;
 }
 
 export interface RouteResult {
@@ -64,7 +65,7 @@ async function fetchQuote(req: RouteRequest): Promise<RouteResult | null> {
     toToken: req.toTokenAddress,
     fromAmount: req.fromAmount,
     fromAddress: req.fromAddress ?? MULTIMESH_FEE_WALLET,
-    slippage: "0.05",
+    slippage: String(req.slippage ?? 0.05),
     maxPriceImpact: "0.5",
     allowDestinationCall: "true",
     integrator: "multimesh",
@@ -106,7 +107,7 @@ async function fetchAdvancedRoutes(req: RouteRequest): Promise<RouteResult | nul
     fromAddress: req.fromAddress ?? MULTIMESH_FEE_WALLET,
     toAddress: req.fromAddress ?? MULTIMESH_FEE_WALLET,
     options: {
-      slippage: 0.05,
+      slippage: req.slippage ?? 0.05,
       maxPriceImpact: 0.5,
       allowSwitchChain: true,
       allowDestinationCall: true,
