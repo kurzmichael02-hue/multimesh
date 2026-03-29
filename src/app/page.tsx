@@ -77,7 +77,7 @@ export default function Home() {
       <button
         onClick={() => setShowApp(false)}
         style={{
-          position: "fixed", top: 16, left: 16, zIndex: 400,
+          position: "fixed", top: 52, left: 16, zIndex: 400,
           background: "rgba(13,17,23,0.9)", border: "1px solid rgba(255,255,255,0.08)",
           borderRadius: 10, padding: "6px 14px", color: "#A0B0C8",
           fontSize: 12, fontFamily: "monospace", cursor: "pointer",
@@ -260,3 +260,4 @@ export default function Home() {
     </div>
   );
 }
+
