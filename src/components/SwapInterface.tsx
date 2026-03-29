@@ -277,6 +277,8 @@ export function SwapInterface() {
   const [showTx, setShowTx]       = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [showBanner, setShowBanner] = useState(true);
+  const [fromTokenUnverified, setFromTokenUnverified] = useState(false);
+const [toTokenUnverified, setToTokenUnverified] = useState(false);
   const swap = useSwapExecution();
 
   const isNativeToken = fromToken.address === "0x0000000000000000000000000000000000000000";
@@ -397,7 +399,7 @@ export function SwapInterface() {
               </div>
               <div style={S.row}>
                 <input style={S.input} type="number" placeholder="0.00" value={amount} onChange={e => { setAmount(e.target.value); reset(); }} />
-                <TokenDropdown value={fromToken} tokens={fromTokens} onChange={t => { setFromToken(t); reset(); }} chainId={fromChain.id} />
+                <TokenDropdown value={fromToken} tokens={fromTokens} onChange={t => { setFromToken(t); setFromTokenUnverified(!SUPPORTED_TOKENS[fromChain.id]?.find(x => x.address === t.address)); reset(); }} chainId={fromChain.id} />
               </div>
               {address && balanceData && (
                 <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 6 }}>
@@ -422,7 +424,7 @@ export function SwapInterface() {
                 <div style={{ flex: 1, fontSize: 28, fontWeight: 700, color: selectedRoute ? "#00E5FF" : "#1C2A3A" }}>
                   {selectedRoute ? fmt(selectedRoute.toAmount, toToken.decimals) : "0.00"}
                 </div>
-                <TokenDropdown value={toToken} tokens={toTokens} onChange={t => { setToToken(t); reset(); }} chainId={toChain.id} />
+                <TokenDropdown value={toToken} tokens={toTokens} onChange={t => { setToToken(t); setToTokenUnverified(!SUPPORTED_TOKENS[toChain.id]?.find(x => x.address === t.address)); reset(); }} chainId={toChain.id} />
               </div>
 
               {selectedRoute && (
@@ -474,7 +476,11 @@ export function SwapInterface() {
                 </div>
               ) : "Find Best Route"}
             </button>
-
+            {(fromTokenUnverified || toTokenUnverified) && (
+  <div style={{ fontSize: 11, fontFamily: "monospace", color: "#F3BA2F", padding: "8px 12px", background: "rgba(243,186,47,0.06)", borderRadius: 8, border: "1px solid rgba(243,186,47,0.15)", marginTop: 8 }}>
+    ⚠ Unverified token — always check the contract address before swapping.
+  </div>
+)}
             {error && <div style={{ fontSize: 12, fontFamily: "monospace", color: "#FC8181", textAlign: "center", padding: 10, background: "rgba(252,129,129,0.06)", borderRadius: 10, border: "1px solid rgba(252,129,129,0.15)", marginTop: 8 }}>{error}</div>}
           </div>
 
