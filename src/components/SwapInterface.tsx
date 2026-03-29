@@ -27,6 +27,36 @@ const CHAIN_LOGOS: Record<number, string> = {
   11155111:  "https://assets.coingecko.com/coins/images/279/small/ethereum.png",
 };
 
+const CHAIN_NAMES: Record<number, string> = {
+  1: "Ethereum", 137: "Polygon", 56: "BNB Chain", 42161: "Arbitrum", 10: "Optimism", 11155111: "Sepolia",
+};
+
+interface SwapHistoryEntry {
+  id: string;
+  timestamp: number;
+  fromChain: string;
+  toChain: string;
+  fromToken: string;
+  toToken: string;
+  fromAmount: string;
+  toAmount: string;
+  txHash: string;
+  explorerLink?: string;
+}
+
+const HISTORY_KEY = "multimesh_swap_history";
+
+function loadHistory(): SwapHistoryEntry[] {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
+}
+
+function saveHistory(entries: SwapHistoryEntry[]) {
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(entries.slice(0, 50))); } catch {}
+}
+
 type TxStatus = "idle" | "pending" | "bridging" | "swapping" | "done";
 const TX_STEPS: TxStatus[] = ["pending", "bridging", "swapping", "done"];
 const TX_META: Record<string, { label: string; detail: string; color: string }> = {
@@ -130,13 +160,8 @@ function TokenDropdown({ value, tokens, onChange, chainId }: { value: Token; tok
           <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", marginTop: 6, paddingTop: 8, padding: "8px 6px 4px" }}>
             <div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1, marginBottom: 6 }}>PASTE CONTRACT ADDRESS</div>
             <div style={{ display: "flex", gap: 6 }}>
-              <input
-                value={customAddress}
-                onChange={e => { setCustomAddress(e.target.value); setCustomError(""); }}
-                onKeyDown={e => e.key === "Enter" && handleCustomToken()}
-                placeholder="0x..."
-                style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "6px 8px", fontSize: 11, fontFamily: "monospace", color: "#F0F4FF", outline: "none", minWidth: 0 }}
-              />
+              <input value={customAddress} onChange={e => { setCustomAddress(e.target.value); setCustomError(""); }} onKeyDown={e => e.key === "Enter" && handleCustomToken()} placeholder="0x..."
+                style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "6px 8px", fontSize: 11, fontFamily: "monospace", color: "#F0F4FF", outline: "none", minWidth: 0 }} />
               <button onClick={handleCustomToken} disabled={customLoading} style={{ padding: "6px 10px", borderRadius: 8, background: customLoading ? "#1C2333" : "rgba(0,229,255,0.1)", border: "1px solid rgba(0,229,255,0.2)", color: "#00E5FF", fontSize: 11, cursor: customLoading ? "not-allowed" : "pointer", whiteSpace: "nowrap" }}>
                 {customLoading ? "..." : "Add"}
               </button>
@@ -156,6 +181,54 @@ function SkeletonRoute() {
       {[80, 130, 55].map((w, i) => (
         <div key={i} style={{ height: 11, borderRadius: 6, background: "#1C2333", marginBottom: i < 2 ? 10 : 0, width: w }} />
       ))}
+    </div>
+  );
+}
+
+function HistoryPanel({ onClose }: { onClose: () => void }) {
+  const [history, setHistory] = useState<SwapHistoryEntry[]>([]);
+  useEffect(() => { setHistory(loadHistory()); }, []);
+
+  const fmtDate = (ts: number) => {
+    const d = new Date(ts);
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 24 }}>
+      <div style={{ width: "100%", maxWidth: 460, background: "#0D1117", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 24, maxHeight: "80vh", display: "flex", flexDirection: "column" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+          <span style={{ fontSize: 15, fontWeight: 700, color: "#F0F4FF" }}>Swap History</span>
+          <button onClick={onClose} style={{ background: "none", border: "none", color: "#3D4F6B", cursor: "pointer", fontSize: 20 }}>×</button>
+        </div>
+        <div style={{ overflowY: "auto", flex: 1 }}>
+          {history.length === 0 ? (
+            <div style={{ textAlign: "center", padding: 40, fontSize: 13, fontFamily: "monospace", color: "#3D4F6B" }}>No swaps yet</div>
+          ) : history.map(h => (
+            <div key={h.id} style={{ padding: "12px 14px", background: "rgba(6,8,16,0.8)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 12, marginBottom: 8 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#F0F4FF" }}>
+                  {h.fromAmount} {h.fromToken} → {h.toAmount} {h.toToken}
+                </div>
+                <span style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B" }}>{fmtDate(h.timestamp)}</span>
+              </div>
+              <div style={{ fontSize: 11, fontFamily: "monospace", color: "#3D4F6B", marginBottom: 6 }}>
+                {h.fromChain} → {h.toChain}
+              </div>
+              {h.explorerLink && (
+                <a href={h.explorerLink} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, fontFamily: "monospace", color: "#00E5FF", textDecoration: "none" }}>
+                  View on LI.FI Explorer ↗
+                </a>
+              )}
+            </div>
+          ))}
+        </div>
+        {history.length > 0 && (
+          <button onClick={() => { saveHistory([]); setHistory([]); }} style={{ marginTop: 16, width: "100%", padding: 10, borderRadius: 10, background: "transparent", color: "#3D4F6B", border: "1px solid rgba(255,255,255,0.06)", fontSize: 12, fontFamily: "monospace", cursor: "pointer" }}>
+            Clear History
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -277,8 +350,9 @@ export function SwapInterface() {
   const [showTx, setShowTx]       = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [showBanner, setShowBanner] = useState(true);
+  const [showHistory, setShowHistory] = useState(false);
   const [fromTokenUnverified, setFromTokenUnverified] = useState(false);
-const [toTokenUnverified, setToTokenUnverified] = useState(false);
+  const [toTokenUnverified, setToTokenUnverified] = useState(false);
   const swap = useSwapExecution();
 
   const isNativeToken = fromToken.address === "0x0000000000000000000000000000000000000000";
@@ -287,6 +361,26 @@ const [toTokenUnverified, setToTokenUnverified] = useState(false);
     token: isNativeToken ? undefined : fromToken.address as `0x${string}`,
     chainId: fromChain.id,
   });
+
+  // Save to history when swap completes
+  useEffect(() => {
+    if (swap.step === "done" && swap.txHash && selectedRoute) {
+      const entry: SwapHistoryEntry = {
+        id: swap.txHash,
+        timestamp: Date.now(),
+        fromChain: CHAIN_NAMES[fromChain.id] ?? fromChain.name,
+        toChain: CHAIN_NAMES[toChain.id] ?? toChain.name,
+        fromToken: fromToken.symbol,
+        toToken: toToken.symbol,
+        fromAmount: parseFloat(amount).toFixed(4),
+        toAmount: parseFloat(ethers.formatUnits(selectedRoute.toAmount, toToken.decimals)).toFixed(4),
+        txHash: swap.txHash,
+        explorerLink: swap.explorerLink ?? undefined,
+      };
+      const existing = loadHistory();
+      saveHistory([entry, ...existing]);
+    }
+  }, [swap.step]);
 
   const fromTokens = SUPPORTED_TOKENS[fromChain.id] ?? [];
   const toTokens   = SUPPORTED_TOKENS[toChain.id]   ?? [];
@@ -364,6 +458,8 @@ const [toTokenUnverified, setToTokenUnverified] = useState(false);
         </div>
       )}
 
+      {showHistory && <HistoryPanel onClose={() => setShowHistory(false)} />}
+
       {showTx && selectedRoute && (
         <TxModal route={selectedRoute} fromToken={fromToken} toToken={toToken} amount={amount} onClose={() => setShowTx(false)} />
       )}
@@ -388,7 +484,12 @@ const [toTokenUnverified, setToTokenUnverified] = useState(false);
                 <span style={{ fontSize: 9, fontFamily: "monospace", color: "#F3BA2F", background: "rgba(243,186,47,0.1)", padding: "1px 6px", borderRadius: 4, letterSpacing: 1 }}>BETA</span>
               </div>
             </div>
-            <ConnectButton chainStatus="none" showBalance={false} />
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <button onClick={() => setShowHistory(true)} style={{ padding: "6px 12px", borderRadius: 9, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", color: "#3D4F6B", fontSize: 11, fontFamily: "monospace", cursor: "pointer", letterSpacing: 1 }}>
+                HISTORY
+              </button>
+              <ConnectButton chainStatus="none" showBalance={false} />
+            </div>
           </div>
 
           <div style={S.swapCard}>
@@ -477,10 +578,10 @@ const [toTokenUnverified, setToTokenUnverified] = useState(false);
               ) : "Find Best Route"}
             </button>
             {(fromTokenUnverified || toTokenUnverified) && (
-  <div style={{ fontSize: 11, fontFamily: "monospace", color: "#F3BA2F", padding: "8px 12px", background: "rgba(243,186,47,0.06)", borderRadius: 8, border: "1px solid rgba(243,186,47,0.15)", marginTop: 8 }}>
-    ⚠ Unverified token — always check the contract address before swapping.
-  </div>
-)}
+              <div style={{ fontSize: 11, fontFamily: "monospace", color: "#F3BA2F", padding: "8px 12px", background: "rgba(243,186,47,0.06)", borderRadius: 8, border: "1px solid rgba(243,186,47,0.15)", marginTop: 8 }}>
+                ⚠ Unverified token — always check the contract address before swapping.
+              </div>
+            )}
             {error && <div style={{ fontSize: 12, fontFamily: "monospace", color: "#FC8181", textAlign: "center", padding: 10, background: "rgba(252,129,129,0.06)", borderRadius: 10, border: "1px solid rgba(252,129,129,0.15)", marginTop: 8 }}>{error}</div>}
           </div>
 
