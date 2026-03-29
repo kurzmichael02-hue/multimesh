@@ -47,10 +47,7 @@ interface SwapHistoryEntry {
 const HISTORY_KEY = "multimesh_swap_history";
 
 function loadHistory(): SwapHistoryEntry[] {
-  try {
-    const raw = localStorage.getItem(HISTORY_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch { return []; }
+  try { const raw = localStorage.getItem(HISTORY_KEY); return raw ? JSON.parse(raw) : []; } catch { return []; }
 }
 
 function saveHistory(entries: SwapHistoryEntry[]) {
@@ -66,6 +63,8 @@ const TX_META: Record<string, { label: string; detail: string; color: string }> 
   done:     { label: "Transaction complete",       detail: "Your tokens have arrived",              color: "#00E5FF" },
 };
 
+const SLIPPAGE_OPTIONS = [0.5, 1, 3, 5];
+
 function Img({ src, size = 24 }: { src: string; size?: number }) {
   const [err, setErr] = useState(false);
   if (err) return <div style={{ width: size, height: size, borderRadius: "50%", background: "#1C2333", flexShrink: 0 }} />;
@@ -78,6 +77,35 @@ function useOutsideClick(ref: React.RefObject<HTMLDivElement>, cb: () => void) {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [ref, cb]);
+}
+
+function SlippagePanel({ slippage, onChange, onClose }: { slippage: number; onChange: (v: number) => void; onClose: () => void }) {
+  const [custom, setCustom] = useState("");
+  const ref = useRef<HTMLDivElement>(null!);
+  useOutsideClick(ref, onClose);
+
+  return (
+    <div ref={ref} style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: "#0D1117", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: 16, zIndex: 150, width: 240, boxShadow: "0 16px 40px rgba(0,0,0,0.6)" }}>
+      <div style={{ fontSize: 11, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1, marginBottom: 10 }}>SLIPPAGE TOLERANCE</div>
+      <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+        {SLIPPAGE_OPTIONS.map(opt => (
+          <button key={opt} onClick={() => { onChange(opt); setCustom(""); }}
+            style={{ flex: 1, padding: "6px 0", borderRadius: 8, background: slippage === opt ? "rgba(0,229,255,0.15)" : "rgba(255,255,255,0.04)", border: slippage === opt ? "1px solid rgba(0,229,255,0.4)" : "1px solid rgba(255,255,255,0.07)", color: slippage === opt ? "#00E5FF" : "#A0B0C8", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
+            {opt}%
+          </button>
+        ))}
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <input
+          value={custom}
+          onChange={e => { setCustom(e.target.value); const v = parseFloat(e.target.value); if (!isNaN(v) && v > 0 && v <= 50) onChange(v); }}
+          placeholder="Custom %"
+          style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "6px 10px", fontSize: 12, fontFamily: "monospace", color: "#F0F4FF", outline: "none" }}
+        />
+      </div>
+      {slippage > 5 && <div style={{ fontSize: 10, fontFamily: "monospace", color: "#F3BA2F", marginTop: 6 }}>⚠ High slippage — use with caution</div>}
+    </div>
+  );
 }
 
 function ChainDropdown({ value, onChange }: { value: typeof SUPPORTED_CHAINS[0]; onChange: (c: typeof SUPPORTED_CHAINS[0]) => void }) {
@@ -116,25 +144,14 @@ function TokenDropdown({ value, tokens, onChange, chainId }: { value: Token; tok
 
   const handleCustomToken = async () => {
     if (!customAddress || customAddress.length < 10) return;
-    setCustomLoading(true);
-    setCustomError("");
+    setCustomLoading(true); setCustomError("");
     try {
       const res = await fetch(`https://li.quest/v1/token?chain=${chainId}&token=${customAddress}`);
       if (!res.ok) throw new Error("Token not found");
       const data = await res.json();
-      const token: Token = {
-        symbol: data.symbol ?? "???",
-        name: data.name ?? customAddress.slice(0, 8),
-        address: customAddress,
-        decimals: data.decimals ?? 18,
-        logo: "",
-      };
-      onChange(token);
-      setOpen(false);
-      setCustomAddress("");
-    } catch {
-      setCustomError("Token not found on this chain");
-    }
+      onChange({ symbol: data.symbol ?? "???", name: data.name ?? customAddress.slice(0, 8), address: customAddress, decimals: data.decimals ?? 18, logo: "" });
+      setOpen(false); setCustomAddress("");
+    } catch { setCustomError("Token not found on this chain"); }
     setCustomLoading(false);
   };
 
@@ -188,12 +205,7 @@ function SkeletonRoute() {
 function HistoryPanel({ onClose }: { onClose: () => void }) {
   const [history, setHistory] = useState<SwapHistoryEntry[]>([]);
   useEffect(() => { setHistory(loadHistory()); }, []);
-
-  const fmtDate = (ts: number) => {
-    const d = new Date(ts);
-    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
-  };
-
+  const fmtDate = (ts: number) => new Date(ts).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 24 }}>
       <div style={{ width: "100%", maxWidth: 460, background: "#0D1117", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 24, maxHeight: "80vh", display: "flex", flexDirection: "column" }}>
@@ -207,19 +219,11 @@ function HistoryPanel({ onClose }: { onClose: () => void }) {
           ) : history.map(h => (
             <div key={h.id} style={{ padding: "12px 14px", background: "rgba(6,8,16,0.8)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 12, marginBottom: 8 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#F0F4FF" }}>
-                  {h.fromAmount} {h.fromToken} → {h.toAmount} {h.toToken}
-                </div>
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#F0F4FF" }}>{h.fromAmount} {h.fromToken} → {h.toAmount} {h.toToken}</div>
                 <span style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B" }}>{fmtDate(h.timestamp)}</span>
               </div>
-              <div style={{ fontSize: 11, fontFamily: "monospace", color: "#3D4F6B", marginBottom: 6 }}>
-                {h.fromChain} → {h.toChain}
-              </div>
-              {h.explorerLink && (
-                <a href={h.explorerLink} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, fontFamily: "monospace", color: "#00E5FF", textDecoration: "none" }}>
-                  View on LI.FI Explorer ↗
-                </a>
-              )}
+              <div style={{ fontSize: 11, fontFamily: "monospace", color: "#3D4F6B", marginBottom: 6 }}>{h.fromChain} → {h.toChain}</div>
+              {h.explorerLink && <a href={h.explorerLink} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, fontFamily: "monospace", color: "#00E5FF", textDecoration: "none" }}>View on LI.FI Explorer ↗</a>}
             </div>
           ))}
         </div>
@@ -238,16 +242,13 @@ function TxModal({ route, fromToken, toToken, amount, onClose }: { route: RouteR
   const [step, setStep] = useState(0);
   const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
   const fmt = (raw: string, dec: number) => { try { return parseFloat(ethers.formatUnits(raw, dec)).toFixed(6); } catch { return "—"; } };
-
   const simulate = async () => {
     setStatus("pending"); setStep(0); await delay(1800);
     setStatus("bridging"); setStep(1); await delay(2400);
     setStatus("swapping"); setStep(2); await delay(1800);
     setStatus("done"); setStep(3);
   };
-
   const meta = status !== "idle" ? TX_META[status] : null;
-
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 24 }}>
       <div style={{ width: "100%", maxWidth: 420, background: "#0D1117", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 24, boxShadow: "0 32px 80px rgba(0,0,0,0.7)" }}>
@@ -256,9 +257,7 @@ function TxModal({ route, fromToken, toToken, amount, onClose }: { route: RouteR
             <span style={{ fontSize: 15, fontWeight: 700, color: "#F0F4FF" }}>Confirm Swap</span>
             <span style={{ fontSize: 11, fontFamily: "monospace", color: "#F3BA2F", background: "rgba(243,186,47,0.1)", padding: "2px 8px", borderRadius: 5 }}>SIMULATED</span>
           </div>
-          {(status === "idle" || status === "done") && (
-            <button onClick={onClose} style={{ background: "none", border: "none", color: "#3D4F6B", cursor: "pointer", fontSize: 20, lineHeight: 1, padding: 0 }}>×</button>
-          )}
+          {(status === "idle" || status === "done") && <button onClick={onClose} style={{ background: "none", border: "none", color: "#3D4F6B", cursor: "pointer", fontSize: 20, lineHeight: 1, padding: 0 }}>×</button>}
         </div>
         <div style={{ background: "rgba(6,8,16,0.8)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, padding: "14px 16px", marginBottom: 20 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -274,10 +273,7 @@ function TxModal({ route, fromToken, toToken, amount, onClose }: { route: RouteR
           </div>
           <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.04)", display: "flex", gap: 16 }}>
             {[["FEE", `$${parseFloat(route.gasCostUSD || "0").toFixed(2)}`], ["TIME", route.executionDuration < 60 ? `~${route.executionDuration}s` : `~${Math.ceil(route.executionDuration / 60)}m`], ["VALUE", `~$${parseFloat(route.toAmountUSD || "0").toFixed(2)}`]].map(([l, v]) => (
-              <div key={l}>
-                <div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1 }}>{l}</div>
-                <div style={{ fontSize: 12, fontFamily: "monospace", color: "#A0B0C8", marginTop: 2 }}>{v}</div>
-              </div>
+              <div key={l}><div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1 }}>{l}</div><div style={{ fontSize: 12, fontFamily: "monospace", color: "#A0B0C8", marginTop: 2 }}>{v}</div></div>
             ))}
           </div>
         </div>
@@ -315,21 +311,9 @@ function TxModal({ route, fromToken, toToken, amount, onClose }: { route: RouteR
             )}
           </div>
         )}
-        {status === "idle" && (
-          <button onClick={simulate} style={{ width: "100%", padding: 15, borderRadius: 14, background: "#00E5FF", color: "#060810", border: "none", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
-            Confirm Swap · Simulated
-          </button>
-        )}
-        {status === "done" && (
-          <button onClick={onClose} style={{ width: "100%", padding: 15, borderRadius: 14, background: "transparent", color: "#00E5FF", border: "1px solid rgba(0,229,255,0.3)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
-            Done
-          </button>
-        )}
-        {status !== "idle" && status !== "done" && (
-          <button disabled style={{ width: "100%", padding: 15, borderRadius: 14, background: "#0D1520", color: "#2D3F52", border: "none", fontWeight: 700, fontSize: 14, cursor: "not-allowed" }}>
-            Processing...
-          </button>
-        )}
+        {status === "idle" && <button onClick={simulate} style={{ width: "100%", padding: 15, borderRadius: 14, background: "#00E5FF", color: "#060810", border: "none", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Confirm Swap · Simulated</button>}
+        {status === "done" && <button onClick={onClose} style={{ width: "100%", padding: 15, borderRadius: 14, background: "transparent", color: "#00E5FF", border: "1px solid rgba(0,229,255,0.3)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Done</button>}
+        {status !== "idle" && status !== "done" && <button disabled style={{ width: "100%", padding: 15, borderRadius: 14, background: "#0D1520", color: "#2D3F52", border: "none", fontWeight: 700, fontSize: 14, cursor: "not-allowed" }}>Processing...</button>}
       </div>
     </div>
   );
@@ -351,9 +335,12 @@ export function SwapInterface() {
   const [showDetails, setShowDetails] = useState(false);
   const [showBanner, setShowBanner] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
+  const [showSlippage, setShowSlippage] = useState(false);
+  const [slippage, setSlippage]   = useState(5); // default 5%
   const [fromTokenUnverified, setFromTokenUnverified] = useState(false);
   const [toTokenUnverified, setToTokenUnverified] = useState(false);
   const swap = useSwapExecution();
+  const settingsRef = useRef<HTMLDivElement>(null!);
 
   const isNativeToken = fromToken.address === "0x0000000000000000000000000000000000000000";
   const { data: balanceData } = useBalance({
@@ -362,7 +349,6 @@ export function SwapInterface() {
     chainId: fromChain.id,
   });
 
-  // Save to history when swap completes
   useEffect(() => {
     if (swap.step === "done" && swap.txHash && selectedRoute) {
       const entry: SwapHistoryEntry = {
@@ -377,8 +363,7 @@ export function SwapInterface() {
         txHash: swap.txHash,
         explorerLink: swap.explorerLink ?? undefined,
       };
-      const existing = loadHistory();
-      saveHistory([entry, ...existing]);
+      saveHistory([entry, ...loadHistory()]);
     }
   }, [swap.step]);
 
@@ -396,7 +381,7 @@ export function SwapInterface() {
     setLoading(true); setError(""); reset();
     try {
       const fromAmount = ethers.parseUnits(amount, fromToken.decimals).toString();
-      const result = await getRoutes({ fromChainId: fromChain.id, toChainId: toChain.id, fromTokenAddress: fromToken.address, toTokenAddress: toToken.address, fromAmount, fromAddress: address });
+      const result = await getRoutes({ fromChainId: fromChain.id, toChainId: toChain.id, fromTokenAddress: fromToken.address, toTokenAddress: toToken.address, fromAmount, fromAddress: address, slippage: slippage / 100 });
       if (result.length === 0) setError("No routes found. Try a different amount or pair.");
       else { setRoutes(result); setSelectedRoute(result[0]); setTimeout(() => setRoutesVisible(true), 50); }
     } catch (e: any) {
@@ -459,10 +444,7 @@ export function SwapInterface() {
       )}
 
       {showHistory && <HistoryPanel onClose={() => setShowHistory(false)} />}
-
-      {showTx && selectedRoute && (
-        <TxModal route={selectedRoute} fromToken={fromToken} toToken={toToken} amount={amount} onClose={() => setShowTx(false)} />
-      )}
+      {showTx && selectedRoute && <TxModal route={selectedRoute} fromToken={fromToken} toToken={toToken} amount={amount} onClose={() => setShowTx(false)} />}
 
       <div style={S.page}>
         {showBanner && (
@@ -488,6 +470,13 @@ export function SwapInterface() {
               <button onClick={() => setShowHistory(true)} style={{ padding: "6px 12px", borderRadius: 9, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", color: "#3D4F6B", fontSize: 11, fontFamily: "monospace", cursor: "pointer", letterSpacing: 1 }}>
                 HISTORY
               </button>
+              {/* Settings button with slippage panel */}
+              <div ref={settingsRef} style={{ position: "relative" }}>
+                <button onClick={() => setShowSlippage(s => !s)} style={{ padding: "6px 10px", borderRadius: 9, background: showSlippage ? "rgba(0,229,255,0.08)" : "rgba(255,255,255,0.03)", border: showSlippage ? "1px solid rgba(0,229,255,0.2)" : "1px solid rgba(255,255,255,0.07)", color: slippage !== 5 ? "#00E5FF" : "#3D4F6B", fontSize: 11, fontFamily: "monospace", cursor: "pointer", letterSpacing: 1 }}>
+                  ⚙ {slippage}%
+                </button>
+                {showSlippage && <SlippagePanel slippage={slippage} onChange={v => { setSlippage(v); reset(); }} onClose={() => setShowSlippage(false)} />}
+              </div>
               <ConnectButton chainStatus="none" showBalance={false} />
             </div>
           </div>
@@ -527,23 +516,13 @@ export function SwapInterface() {
                 </div>
                 <TokenDropdown value={toToken} tokens={toTokens} onChange={t => { setToToken(t); setToTokenUnverified(!SUPPORTED_TOKENS[toChain.id]?.find(x => x.address === t.address)); reset(); }} chainId={toChain.id} />
               </div>
-
               {selectedRoute && (
                 <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.04)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <div style={{ display: "flex", gap: 12 }}>
-                      <div>
-                        <div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1 }}>FEE</div>
-                        <div style={{ fontSize: 12, fontFamily: "monospace", color: "#A0B0C8", marginTop: 2 }}>${parseFloat(selectedRoute.gasCostUSD || "0").toFixed(2)}</div>
-                      </div>
-                      <div>
-                        <div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1 }}>TIME</div>
-                        <div style={{ fontSize: 12, fontFamily: "monospace", color: "#A0B0C8", marginTop: 2 }}>{fmtTime(selectedRoute.executionDuration)}</div>
-                      </div>
-                      <div>
-                        <div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1 }}>RISK</div>
-                        <div style={{ fontSize: 12, fontFamily: "monospace", color: getRiskLabel(selectedRoute.tags).color, marginTop: 2 }}>{getRiskLabel(selectedRoute.tags).label}</div>
-                      </div>
+                      <div><div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1 }}>FEE</div><div style={{ fontSize: 12, fontFamily: "monospace", color: "#A0B0C8", marginTop: 2 }}>${parseFloat(selectedRoute.gasCostUSD || "0").toFixed(2)}</div></div>
+                      <div><div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1 }}>TIME</div><div style={{ fontSize: 12, fontFamily: "monospace", color: "#A0B0C8", marginTop: 2 }}>{fmtTime(selectedRoute.executionDuration)}</div></div>
+                      <div><div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1 }}>RISK</div><div style={{ fontSize: 12, fontFamily: "monospace", color: getRiskLabel(selectedRoute.tags).color, marginTop: 2 }}>{getRiskLabel(selectedRoute.tags).label}</div></div>
                     </div>
                     <button onClick={() => setShowDetails(d => !d)} style={{ fontSize: 11, fontFamily: "monospace", color: "#3D4F6B", background: "none", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 6, padding: "3px 8px", cursor: "pointer" }}>
                       {showDetails ? "Hide ▲" : "Details ▾"}
@@ -559,10 +538,7 @@ export function SwapInterface() {
                           ))}
                         </div>
                       )}
-                      <div>
-                        <div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1 }}>VALUE OUT</div>
-                        <div style={{ fontSize: 12, fontFamily: "monospace", color: "#A0B0C8", marginTop: 2 }}>~${parseFloat(selectedRoute.toAmountUSD || "0").toFixed(2)}</div>
-                      </div>
+                      <div><div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1 }}>VALUE OUT</div><div style={{ fontSize: 12, fontFamily: "monospace", color: "#A0B0C8", marginTop: 2 }}>~${parseFloat(selectedRoute.toAmountUSD || "0").toFixed(2)}</div></div>
                     </div>
                   )}
                 </div>
