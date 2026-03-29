@@ -1,10 +1,19 @@
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
 import { mainnet, polygon, bsc, sepolia, arbitrum, optimism } from "wagmi/chains";
+import { http } from "wagmi";
 
 export const config = getDefaultConfig({
   appName: "MultiMesh",
   projectId: "29975bd3e0414e493cdfa9979d53cd40",
   chains: [mainnet, polygon, bsc, arbitrum, optimism, sepolia],
+  transports: {
+    [mainnet.id]:   http("https://eth.llamarpc.com"),
+    [polygon.id]:   http("https://polygon.llamarpc.com"),
+    [bsc.id]:       http("https://binance.llamarpc.com"),
+    [arbitrum.id]:  http("https://arbitrum.llamarpc.com"),
+    [optimism.id]:  http("https://optimism.llamarpc.com"),
+    [sepolia.id]:   http("https://rpc.sepolia.org"),
+  },
   ssr: true,
 });
 
@@ -35,16 +44,16 @@ export const SUPPORTED_TOKENS: Record<number, Token[]> = {
     { symbol: "USDT", name: "Tether",   address: "0x55d398326f99059fF775485246999027B3197955", decimals: 18, logo: "₮" },
   ],
   42161: [
-    { symbol: "ETH",  name: "Ethereum",    address: "0x0000000000000000000000000000000000000000", decimals: 18, logo: "⟠" },
-    { symbol: "USDC", name: "USD Coin",    address: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831", decimals: 6,  logo: "◎" },
-    { symbol: "USDT", name: "Tether",      address: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9", decimals: 6,  logo: "₮" },
-    { symbol: "ARB",  name: "Arbitrum",    address: "0x912CE59144191C1204E64559FE8253a0e49E6548", decimals: 18, logo: "◎" },
+    { symbol: "ETH",  name: "Ethereum", address: "0x0000000000000000000000000000000000000000", decimals: 18, logo: "⟠" },
+    { symbol: "USDC", name: "USD Coin", address: "0xaf88d065e77c8cC2239327C5EDb3A432268e5831", decimals: 6,  logo: "◎" },
+    { symbol: "USDT", name: "Tether",   address: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9", decimals: 6,  logo: "₮" },
+    { symbol: "ARB",  name: "Arbitrum", address: "0x912CE59144191C1204E64559FE8253a0e49E6548", decimals: 18, logo: "◎" },
   ],
   10: [
-    { symbol: "ETH",  name: "Ethereum",    address: "0x0000000000000000000000000000000000000000", decimals: 18, logo: "⟠" },
-    { symbol: "USDC", name: "USD Coin",    address: "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85", decimals: 6,  logo: "◎" },
-    { symbol: "USDT", name: "Tether",      address: "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58", decimals: 6,  logo: "₮" },
-    { symbol: "OP",   name: "Optimism",    address: "0x4200000000000000000000000000000000000042", decimals: 18, logo: "◉" },
+    { symbol: "ETH",  name: "Ethereum", address: "0x0000000000000000000000000000000000000000", decimals: 18, logo: "⟠" },
+    { symbol: "USDC", name: "USD Coin", address: "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85", decimals: 6,  logo: "◎" },
+    { symbol: "USDT", name: "Tether",   address: "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58", decimals: 6,  logo: "₮" },
+    { symbol: "OP",   name: "Optimism", address: "0x4200000000000000000000000000000000000042", decimals: 18, logo: "◉" },
   ],
   11155111: [
     { symbol: "ETH", name: "Sepolia ETH", address: "0x0000000000000000000000000000000000000000", decimals: 18, logo: "⟠" },

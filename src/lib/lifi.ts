@@ -53,10 +53,6 @@ export interface RouteStep {
   };
 }
 
-// MultiMesh protocol fee: 15 bps (0.15%)
-// Fee is collected via LI.FI's integrator fee parameter
-// Wallet receives the fee on every swap
-const MULTIMESH_FEE_BPS = 15;
 const MULTIMESH_FEE_WALLET = "0x552008c0f6870c2f77e5cC1d2eb9bdff03e30Ea0";
 
 export async function getRoutes(req: RouteRequest): Promise<RouteResult[]> {
@@ -67,8 +63,9 @@ export async function getRoutes(req: RouteRequest): Promise<RouteResult[]> {
     toToken: req.toTokenAddress,
     fromAmount: req.fromAmount,
     fromAddress: req.fromAddress ?? MULTIMESH_FEE_WALLET,
-    slippage: "0.03",
-    // LI.FI integrator fee — collected on every swap to our wallet
+    slippage: "0.05",               // 5% — better for meme coins and volatile tokens
+    maxPriceImpact: "0.5",          // 50% — allows low-liquidity token routes
+    allowDestinationCall: "true",   // enables swap on destination chain (key for any-to-any)
     integrator: "multimesh",
     fee: "0.0015",
   });
