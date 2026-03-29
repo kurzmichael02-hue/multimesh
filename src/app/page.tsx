@@ -29,7 +29,23 @@ const FEATURES = [
 export default function Home() {
   const [showApp, setShowApp] = useState(false);
 
-  if (showApp) return <SwapInterface />;
+  if (showApp) return (
+    <div style={{ position: "relative" }}>
+      <button
+        onClick={() => setShowApp(false)}
+        style={{
+          position: "fixed", top: 16, left: 16, zIndex: 400,
+          background: "rgba(13,17,23,0.9)", border: "1px solid rgba(255,255,255,0.08)",
+          borderRadius: 10, padding: "6px 14px", color: "#A0B0C8",
+          fontSize: 12, fontFamily: "monospace", cursor: "pointer",
+          display: "flex", alignItems: "center", gap: 6, backdropFilter: "blur(10px)",
+        }}
+      >
+        ← Home
+      </button>
+      <SwapInterface />
+    </div>
+  );
 
   return (
     <div style={{
@@ -55,12 +71,10 @@ export default function Home() {
         .cta-btn:active { transform: translateY(0); }
       `}</style>
 
-      {/* Background effects */}
       <div style={{ position: "fixed", top: -300, left: -300, width: 800, height: 800, background: "radial-gradient(circle,rgba(0,229,255,0.05) 0%,transparent 65%)", pointerEvents: "none" }} />
       <div style={{ position: "fixed", bottom: -300, right: -300, width: 700, height: 700, background: "radial-gradient(circle,rgba(123,97,255,0.05) 0%,transparent 65%)", pointerEvents: "none" }} />
       <div style={{ position: "fixed", inset: 0, backgroundImage: "linear-gradient(rgba(0,229,255,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,0.02) 1px,transparent 1px)", backgroundSize: "48px 48px", pointerEvents: "none" }} />
 
-      {/* Nav */}
       <nav style={{ position: "relative", zIndex: 10, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "20px 32px", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
         <div>
           <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: -0.5 }}>MULTI<span style={{ color: "#00E5FF" }}>MESH</span></div>
@@ -74,7 +88,6 @@ export default function Home() {
         </div>
       </nav>
 
-      {/* Hero */}
       <section style={{ position: "relative", zIndex: 1, textAlign: "center", padding: "80px 24px 60px" }}>
         <div className="hero-title" style={{ fontSize: "clamp(36px, 6vw, 64px)", fontWeight: 700, letterSpacing: -1.5, lineHeight: 1.1, marginBottom: 20 }}>
           Swap any token.<br />
@@ -91,7 +104,6 @@ export default function Home() {
           <div style={{ marginTop: 12, fontSize: 12, fontFamily: "monospace", color: "#3D4F6B" }}>Beta · Mainnet · Use small amounts</div>
         </div>
 
-        {/* Stats */}
         <div className="hero-stats" style={{ display: "flex", justifyContent: "center", gap: 40, marginTop: 56 }}>
           {STATS.map(s => (
             <div key={s.label}>
@@ -102,7 +114,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Chain logos */}
       <section style={{ position: "relative", zIndex: 1, display: "flex", justifyContent: "center", gap: 16, padding: "0 24px 60px", flexWrap: "wrap" }}>
         {[
           { name: "Ethereum", logo: "https://assets.coingecko.com/coins/images/279/small/ethereum.png" },
@@ -118,7 +129,6 @@ export default function Home() {
         ))}
       </section>
 
-      {/* Features */}
       <section style={{ position: "relative", zIndex: 1, maxWidth: 960, margin: "0 auto", padding: "0 24px 80px" }}>
         <div style={{ textAlign: "center", marginBottom: 40 }}>
           <div style={{ fontSize: 11, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 2, marginBottom: 12 }}>WHY MULTIMESH</div>
@@ -135,7 +145,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Bottom CTA */}
       <section style={{ position: "relative", zIndex: 1, textAlign: "center", padding: "0 24px 80px" }}>
         <div style={{ maxWidth: 480, margin: "0 auto", padding: 36, background: "rgba(13,17,23,0.95)", border: "1px solid rgba(0,229,255,0.1)", borderRadius: 20 }}>
           <div style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>Ready to swap?</div>
@@ -146,10 +155,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer */}
       <footer style={{ position: "relative", zIndex: 1, textAlign: "center", padding: "20px 24px 32px", borderTop: "1px solid rgba(255,255,255,0.04)" }}>
         <div style={{ fontSize: 11, fontFamily: "monospace", color: "#1C2A3A" }}>
-          Powered by LI.FI &nbsp;·&nbsp; ETH &nbsp;·&nbsp; MATIC &nbsp;·&nbsp; BNB &nbsp;·&nbsp; ARB &nbsp;·&nbsp; OP &nbsp;·&nbsp; Beta v0.1 &nbsp;·&nbsp; <a href="/privacy" style={{ color: "#3D4F6B", textDecoration: "none" }}>Privacy Policy</a>
+          Powered by LI.FI &nbsp;·&nbsp; ETH &nbsp;·&nbsp; MATIC &nbsp;·&nbsp; BNB &nbsp;·&nbsp; ARB &nbsp;·&nbsp; OP &nbsp;·&nbsp; Beta v0.1 &nbsp;·&nbsp;
+          <a href="/privacy" style={{ color: "#3D4F6B", textDecoration: "none" }}>Privacy Policy</a>
+          &nbsp;·&nbsp;
+          <a href="/terms" style={{ color: "#3D4F6B", textDecoration: "none" }}>Terms of Service</a>
         </div>
       </footer>
     </div>
