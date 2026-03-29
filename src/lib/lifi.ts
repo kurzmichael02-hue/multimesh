@@ -53,7 +53,7 @@ export interface RouteStep {
   };
 }
 
-const MULTIMESH_FEE_WALLET = "0x552008c0f6870c2f77e5cC1d2eb9bdff03e30Ea0";
+const MULTIMESH_FEE_WALLET = "0xf60EA8a04555D87c9b252096cE98197f87cC080e";
 
 // Primary: /v1/quote — fast, single best route
 async function fetchQuote(req: RouteRequest): Promise<RouteResult | null> {
