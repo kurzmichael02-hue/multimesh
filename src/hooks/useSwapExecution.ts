@@ -88,12 +88,12 @@ export function useSwapExecution() {
           setState(s => ({ ...s, step: "approving" }));
 
           // Reset to 0 first if existing approval > 0 (prevents front-running attack)
-          if (BigInt(allowance as bigint) > 0n) {
+          if (BigInt(allowance as bigint) > BigInt(0)) {
             const resetHash = await writeContract(config, {
               address: action.fromToken.address as Address,
               abi: erc20Abi,
               functionName: "approve",
-              args: [estimate.approvalAddress as Address, 0n],
+              args: [estimate.approvalAddress as Address, BigInt(0)],
             });
             await waitForTransactionReceipt(config, { hash: resetHash, confirmations: 1 });
           }
