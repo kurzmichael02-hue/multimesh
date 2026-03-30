@@ -17,6 +17,32 @@ export interface SwapState {
   error: string | null;
 }
 
+async function recordPoints(params: {
+  wallet: string;
+  txHash: string;
+  fromChain: string;
+  toChain: string;
+  fromToken: string;
+  toToken: string;
+  amountUSD: string;
+  feeUSD: string;
+}) {
+  try {
+    // Get referral code from localStorage if user used one
+    const referralCode = typeof window !== "undefined"
+      ? localStorage.getItem("mm_referral_code") ?? undefined
+      : undefined;
+
+    await fetch("/api/points/record", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...params, referralCode }),
+    });
+  } catch {
+    // Silent fail — points tracking should never break the swap UX
+  }
+}
+
 export function useSwapExecution() {
   const config = useConfig();
   const { address } = useAccount();
@@ -108,6 +134,18 @@ export function useSwapExecution() {
 
         if (result?.status === "FAILED") throw new Error("Bridge transfer failed");
       }
+
+      // Step 4: Record points after successful swap
+      await recordPoints({
+        wallet: address,
+        txHash,
+        fromChain: action.fromChainId.toString(),
+        toChain: action.toChainId.toString(),
+        fromToken: action.fromToken.symbol,
+        toToken: action.toToken.symbol,
+        amountUSD: estimate.fromAmountUSD ?? "0",
+        feeUSD: estimate.gasCosts?.[0]?.amountUSD ?? "0",
+      });
 
       setState(s => ({ ...s, step: "done" }));
     } catch (err) {
