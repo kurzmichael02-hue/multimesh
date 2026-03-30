@@ -9,7 +9,7 @@ const CODE_EXAMPLES = [
 <div id="multimesh-widget"></div>
 
 <!-- 2. Load script -->
-<script src="https://multimesh.vercel.app/multimesh-widget.js"></script>
+<script src="https://themultimesh.com/multimesh-widget.js"></script>
 
 <!-- 3. Initialize -->
 <script>
@@ -41,7 +41,7 @@ const CODE_EXAMPLES = [
     label: "Direct iframe",
     lang: "html",
     code: `<iframe
-  src="https://multimesh.vercel.app/widget?theme=dark&accent=%2300E5FF&integrator=my-app"
+  src="https://themultimesh.com/widget?theme=dark&accent=%2300E5FF&integrator=my-app"
   width="420"
   height="560"
   style="border:none; border-radius:20px"
@@ -142,7 +142,7 @@ export default function DocsPage() {
           <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 6, letterSpacing: -0.3 }}>Quick Start</h2>
           <p style={{ fontSize: 14, color: "#6B7FA3", marginBottom: 20, marginTop: 0 }}>Drop this into any HTML page and you're live.</p>
           <CodeBlock lang="html" code={`<div id="multimesh-widget"></div>
-<script src="https://multimesh.vercel.app/multimesh-widget.js"></script>
+<script src="https://themultimesh.com/multimesh-widget.js"></script>
 <script>MultiMesh.init({ container: '#multimesh-widget' })</script>`} />
         </section>
 
@@ -225,7 +225,7 @@ export default function DocsPage() {
           <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
             {[
               { label: "Telegram", url: "https://t.me/multi_mesh", desc: "Community & support" },
-              { label: "Live App", url: "https://multimesh.vercel.app", desc: "Try it yourself" },
+              { label: "Live App", url: "https://themultimesh.com", desc: "Try it yourself" },
               { label: "Widget Demo", url: "/widget", desc: "See the widget live" },
             ].map(l => (
               <a key={l.label} href={l.url} target="_blank" rel="noopener noreferrer"

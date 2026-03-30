@@ -142,7 +142,7 @@ export default function PointsPage() {
   }
 
   const referralLink = referralCode
-    ? `${typeof window !== "undefined" ? window.location.origin : "https://multimesh.vercel.app"}?ref=${referralCode}`
+    ? `${typeof window !== "undefined" ? window.location.origin : "https://themultimesh.com"}?ref=${referralCode}`
     : null;
 
   const copyLink = () => {
