@@ -25,11 +25,12 @@ const CHAIN_LOGOS: Record<number, string> = {
   56:        "https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png",
   42161:     "https://assets.coingecko.com/coins/images/16547/small/photo_2023-03-29_21.47.00.jpeg",
   10:        "https://assets.coingecko.com/coins/images/25244/small/Optimism.png",
+8453:      "https://assets.coingecko.com/coins/images/35506/small/base.png",
   11155111:  "https://assets.coingecko.com/coins/images/279/small/ethereum.png",
 };
 
 const CHAIN_NAMES: Record<number, string> = {
-  1: "Ethereum", 137: "Polygon", 56: "BNB Chain", 42161: "Arbitrum", 10: "Optimism", 11155111: "Sepolia",
+  1: "Ethereum", 137: "Polygon", 56: "BNB Chain", 42161: "Arbitrum", 10: "Optimism", 8453: "Base", 11155111: "Sepolia",
 };
 
 interface SwapHistoryEntry {
