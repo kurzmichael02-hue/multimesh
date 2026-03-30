@@ -6,6 +6,7 @@ import { SUPPORTED_CHAINS, SUPPORTED_TOKENS, Token } from "@/lib/wagmi";
 import { getRoutes, getRiskLabel, RouteResult } from "@/lib/lifi";
 import { ethers } from "ethers";
 import { useSwapExecution } from "@/hooks/useSwapExecution";
+import { RefuelBanner } from "@/components/RefuelBanner";
 
 const TOKEN_LOGOS: Record<string, string> = {
   ETH:   "https://assets.coingecko.com/coins/images/279/small/ethereum.png",
@@ -428,6 +429,9 @@ export function SwapInterface() {
           <div style={{ width: "100%", maxWidth: 420, background: "#0D1117", border: "1px solid rgba(0,229,255,0.3)", borderRadius: 20, padding: 24 }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: "#00E5FF", marginBottom: 8 }}>Swap Complete ✓</div>
             {swap.explorerLink && <a href={swap.explorerLink} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: "#00E5FF", fontFamily: "monospace" }}>View on LI.FI Explorer</a>}
+            {selectedRoute && (
+              <RefuelBanner toChainId={toChain.id} toChainName={toChain.name} onDismiss={swap.reset} />
+            )}
             <button onClick={swap.reset} style={{ width: "100%", marginTop: 16, padding: 14, borderRadius: 12, background: "transparent", color: "#00E5FF", border: "1px solid rgba(0,229,255,0.3)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Done</button>
           </div>
         </div>

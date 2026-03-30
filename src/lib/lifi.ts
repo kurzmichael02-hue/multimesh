@@ -5,7 +5,15 @@ export interface RouteRequest {
   toTokenAddress: string;
   fromAmount: string;
   fromAddress?: string;
-slippage?: number;
+  slippage?: number;
+}
+
+export interface RefuelRequest {
+  fromChainId: number;
+  toChainId: number;
+  fromAddress: string;
+  toAddress: string;
+  fromAmount: string; // in native token units
 }
 
 export interface RouteResult {
@@ -54,7 +62,98 @@ export interface RouteStep {
   };
 }
 
+// Minimum gas amounts per chain in USD — enough to do 2-3 transactions
+export const MIN_GAS_USD: Record<number, number> = {
+  1:     5.00,  // Ethereum mainnet — gas is expensive
+  137:   0.10,  // Polygon — very cheap
+  56:    0.20,  // BNB Chain
+  42161: 0.50,  // Arbitrum
+  10:    0.20,  // Optimism
+  8453:  0.20,  // Base
+};
+
+// Native gas token symbols per chain
+export const CHAIN_GAS_SYMBOL: Record<number, string> = {
+  1:     "ETH",
+  137:   "MATIC",
+  56:    "BNB",
+  42161: "ETH",
+  10:    "ETH",
+  8453:  "ETH",
+};
+
 const MULTIMESH_FEE_WALLET = "0xf60EA8a04555D87c9b252096cE98197f87cC080e";
+
+// Check if user has enough gas on destination chain
+export async function checkDestinationGas(
+  walletAddress: string,
+  chainId: number
+): Promise<{ hasGas: boolean; balanceUSD: number }> {
+  try {
+    const nativeToken = "0x0000000000000000000000000000000000000000";
+    const res = await fetch(
+      `https://li.quest/v1/token?chain=${chainId}&token=${nativeToken}`
+    );
+    const tokenData = await res.json();
+    const priceUSD = parseFloat(tokenData.priceUSD ?? "0");
+
+    // Get native balance via LI.FI balances API
+    const balRes = await fetch(
+      `https://li.quest/v1/balances/${walletAddress}?chains=${chainId}`
+    );
+    const balData = await balRes.json();
+    const chainBalances = balData[chainId] ?? [];
+    const nativeBal = chainBalances.find(
+      (b: any) => b.address === nativeToken
+    );
+    const balanceUSD =
+      parseFloat(nativeBal?.amount ?? "0") * priceUSD;
+
+    const minRequired = MIN_GAS_USD[chainId] ?? 0.20;
+    return { hasGas: balanceUSD >= minRequired, balanceUSD };
+  } catch {
+    return { hasGas: true, balanceUSD: 0 }; // Fail safe — don't block swap
+  }
+}
+
+// Get a gas refuel quote using LI.FI's refuel bridge
+export async function getRefuelQuote(req: RefuelRequest): Promise<RouteResult | null> {
+  try {
+    const params = new URLSearchParams({
+      fromChain: String(req.fromChainId),
+      toChain: String(req.toChainId),
+      fromToken: "0x0000000000000000000000000000000000000000",
+      toToken: "0x0000000000000000000000000000000000000000",
+      fromAmount: req.fromAmount,
+      fromAddress: req.fromAddress,
+      toAddress: req.toAddress,
+      integrator: "multimesh",
+    });
+
+    const res = await fetch(`https://li.quest/v1/quote?${params}`, {
+      headers: { "Content-Type": "application/json" },
+    });
+    const data = await res.json();
+    if (!res.ok || !data.estimate) return null;
+
+    return {
+      id: data.id ?? "refuel",
+      tool: data.tool ?? "refuel",
+      fromAmount: data.estimate.fromAmount,
+      toAmount: data.estimate.toAmount,
+      toAmountUSD: data.estimate.toAmountUSD ?? "0",
+      gasCostUSD: data.estimate.gasCosts?.[0]?.amountUSD ?? "0",
+      executionDuration: data.estimate.executionDuration ?? 0,
+      steps: data.includedSteps ?? [],
+      tags: ["REFUEL"],
+      action: data.action,
+      estimate: data.estimate,
+      transactionRequest: data.transactionRequest,
+    };
+  } catch {
+    return null;
+  }
+}
 
 // Primary: /v1/quote — fast, single best route
 async function fetchQuote(req: RouteRequest): Promise<RouteResult | null> {
@@ -95,8 +194,7 @@ async function fetchQuote(req: RouteRequest): Promise<RouteResult | null> {
   };
 }
 
-// Fallback: /v1/advanced/routes — broader coverage, finds routes /quote misses
-// Used for low-liquidity tokens and non-indexed BSC/chain tokens
+// Fallback: /v1/advanced/routes
 async function fetchAdvancedRoutes(req: RouteRequest): Promise<RouteResult | null> {
   const body = {
     fromChainId: req.fromChainId,
@@ -149,15 +247,12 @@ async function fetchAdvancedRoutes(req: RouteRequest): Promise<RouteResult | nul
 }
 
 export async function getRoutes(req: RouteRequest): Promise<RouteResult[]> {
-  // Try fast /quote first
   const quote = await fetchQuote(req);
   if (quote) return [quote];
 
-  // Fallback to /advanced/routes for broader token coverage
   const advanced = await fetchAdvancedRoutes(req);
   if (advanced) return [advanced];
 
-  // Both failed — throw meaningful error
   throw new Error("No route found for this pair. The token may not be supported by any available bridge.");
 }
 
