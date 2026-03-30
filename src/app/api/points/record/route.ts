@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 const supabase = createClient(
   "https://fommgavmoligvesyxbmx.supabase.co",
-  process.env.SUPABASE_SERVICE_ROLE_KEY ?? ""
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZvbW1nYXZtb2xpZ3Zlc3l4Ym14Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwNjg5NzQsImV4cCI6MjA4ODY0NDk3NH0.0-7VmvjoqXUYQ2AoMFCgiJEI7X9xYxN0DAG2KrkOk0w"
 );
 
 // POST /api/points/record
