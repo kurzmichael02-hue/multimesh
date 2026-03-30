@@ -25,7 +25,7 @@ const CHAIN_LOGOS: Record<number, string> = {
   56:        "https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png",
   42161:     "https://assets.coingecko.com/coins/images/16547/small/photo_2023-03-29_21.47.00.jpeg",
   10:        "https://assets.coingecko.com/coins/images/25244/small/Optimism.png",
-8453:      "https://assets.coingecko.com/coins/images/35506/small/base.png",
+  8453:      "https://assets.coingecko.com/coins/images/35506/small/base.png",
   11155111:  "https://assets.coingecko.com/coins/images/279/small/ethereum.png",
 };
 
@@ -85,7 +85,6 @@ function SlippagePanel({ slippage, onChange, onClose }: { slippage: number; onCh
   const [custom, setCustom] = useState("");
   const ref = useRef<HTMLDivElement>(null!);
   useOutsideClick(ref, onClose);
-
   return (
     <div ref={ref} style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: "#0D1117", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: 16, zIndex: 150, width: 240, boxShadow: "0 16px 40px rgba(0,0,0,0.6)" }}>
       <div style={{ fontSize: 11, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1, marginBottom: 10 }}>SLIPPAGE TOLERANCE</div>
@@ -98,12 +97,8 @@ function SlippagePanel({ slippage, onChange, onClose }: { slippage: number; onCh
         ))}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <input
-          value={custom}
-          onChange={e => { setCustom(e.target.value); const v = parseFloat(e.target.value); if (!isNaN(v) && v > 0 && v <= 50) onChange(v); }}
-          placeholder="Custom %"
-          style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "6px 10px", fontSize: 12, fontFamily: "monospace", color: "#F0F4FF", outline: "none" }}
-        />
+        <input value={custom} onChange={e => { setCustom(e.target.value); const v = parseFloat(e.target.value); if (!isNaN(v) && v > 0 && v <= 50) onChange(v); }} placeholder="Custom %"
+          style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "6px 10px", fontSize: 12, fontFamily: "monospace", color: "#F0F4FF", outline: "none" }} />
       </div>
       {slippage > 5 && <div style={{ fontSize: 10, fontFamily: "monospace", color: "#F3BA2F", marginTop: 6 }}>⚠ High slippage — use with caution</div>}
     </div>
@@ -321,6 +316,21 @@ function TxModal({ route, fromToken, toToken, amount, onClose }: { route: RouteR
   );
 }
 
+function PriceImpactWarning({ route, amount, toToken }: { route: RouteResult; amount: string; toToken: Token }) {
+  const toUSD = parseFloat(route.toAmountUSD || "0");
+  const toAmt = parseFloat(ethers.formatUnits(route.toAmount, toToken.decimals));
+  const pricePerToken = toAmt > 0 ? toUSD / toAmt : 0;
+  const inputUSD = parseFloat(amount || "0") * pricePerToken;
+  const priceImpact = toUSD > 0 && inputUSD > 0 ? ((inputUSD - toUSD) / inputUSD) * 100 : 0;
+  if (priceImpact <= 5) return null;
+  const isHigh = priceImpact > 15;
+  return (
+    <div style={{ fontSize: 11, fontFamily: "monospace", color: isHigh ? "#FC8181" : "#F3BA2F", padding: "8px 12px", background: isHigh ? "rgba(252,129,129,0.06)" : "rgba(243,186,47,0.06)", borderRadius: 8, border: `1px solid ${isHigh ? "rgba(252,129,129,0.2)" : "rgba(243,186,47,0.2)"}`, marginTop: 8 }}>
+      {isHigh ? "🔴" : "⚠"} Price impact: ~{priceImpact.toFixed(1)}% — {isHigh ? "HIGH RISK. You may lose significant value." : "Consider splitting the trade."}
+    </div>
+  );
+}
+
 export function SwapInterface() {
   const { address } = useAccount();
   const [fromChain, setFromChain] = useState(SUPPORTED_CHAINS[0]);
@@ -338,7 +348,7 @@ export function SwapInterface() {
   const [showBanner, setShowBanner] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
   const [showSlippage, setShowSlippage] = useState(false);
-  const [slippage, setSlippage]   = useState(5); // default 5%
+  const [slippage, setSlippage]   = useState(5);
   const [fromTokenUnverified, setFromTokenUnverified] = useState(false);
   const [toTokenUnverified, setToTokenUnverified] = useState(false);
   const swap = useSwapExecution();
@@ -388,8 +398,7 @@ export function SwapInterface() {
       else { setRoutes(result); setSelectedRoute(result[0]); setTimeout(() => setRoutesVisible(true), 50); }
     } catch (e: any) {
       setError(e?.message ?? "Could not fetch routes. Check your connection.");
-    }
-    finally { setLoading(false); }
+    } finally { setLoading(false); }
   };
 
   const fmt = (raw: string, dec: number) => { try { return parseFloat(ethers.formatUnits(raw, dec)).toFixed(6); } catch { return "—"; } };
@@ -430,9 +439,7 @@ export function SwapInterface() {
           <div style={{ width: "100%", maxWidth: 420, background: "#0D1117", border: "1px solid rgba(0,229,255,0.3)", borderRadius: 20, padding: 24 }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: "#00E5FF", marginBottom: 8 }}>Swap Complete ✓</div>
             {swap.explorerLink && <a href={swap.explorerLink} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: "#00E5FF", fontFamily: "monospace" }}>View on LI.FI Explorer</a>}
-            {selectedRoute && (
-              <RefuelBanner toChainId={toChain.id} toChainName={toChain.name} onDismiss={swap.reset} />
-            )}
+            {selectedRoute && <RefuelBanner toChainId={toChain.id} toChainName={toChain.name} onDismiss={swap.reset} />}
             <button onClick={swap.reset} style={{ width: "100%", marginTop: 16, padding: 14, borderRadius: 12, background: "transparent", color: "#00E5FF", border: "1px solid rgba(0,229,255,0.3)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Done</button>
           </div>
         </div>
@@ -472,13 +479,8 @@ export function SwapInterface() {
               </div>
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <button onClick={() => setShowHistory(true)} style={{ padding: "6px 12px", borderRadius: 9, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", color: "#3D4F6B", fontSize: 11, fontFamily: "monospace", cursor: "pointer", letterSpacing: 1 }}>
-  HISTORY
-</button>
-<a href="/points" style={{ padding: "6px 12px", borderRadius: 9, background: "rgba(0,229,255,0.06)", border: "1px solid rgba(0,229,255,0.15)", color: "#00E5FF", fontSize: 11, fontFamily: "monospace", cursor: "pointer", letterSpacing: 1, textDecoration: "none" }}>
-  POINTS ✦
-</a>
-              {/* Settings button with slippage panel */}
+              <button onClick={() => setShowHistory(true)} style={{ padding: "6px 12px", borderRadius: 9, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", color: "#3D4F6B", fontSize: 11, fontFamily: "monospace", cursor: "pointer", letterSpacing: 1 }}>HISTORY</button>
+              <a href="/points" style={{ padding: "6px 12px", borderRadius: 9, background: "rgba(0,229,255,0.06)", border: "1px solid rgba(0,229,255,0.15)", color: "#00E5FF", fontSize: 11, fontFamily: "monospace", cursor: "pointer", letterSpacing: 1, textDecoration: "none" }}>POINTS ✦</a>
               <div ref={settingsRef} style={{ position: "relative" }}>
                 <button onClick={() => setShowSlippage(s => !s)} style={{ padding: "6px 10px", borderRadius: 9, background: showSlippage ? "rgba(0,229,255,0.08)" : "rgba(255,255,255,0.03)", border: showSlippage ? "1px solid rgba(0,229,255,0.2)" : "1px solid rgba(255,255,255,0.07)", color: slippage !== 5 ? "#00E5FF" : "#3D4F6B", fontSize: 11, fontFamily: "monospace", cursor: "pointer", letterSpacing: 1 }}>
                   ⚙ {slippage}%
@@ -561,11 +563,15 @@ export function SwapInterface() {
                 </div>
               ) : "Find Best Route"}
             </button>
+
             {(fromTokenUnverified || toTokenUnverified) && (
               <div style={{ fontSize: 11, fontFamily: "monospace", color: "#F3BA2F", padding: "8px 12px", background: "rgba(243,186,47,0.06)", borderRadius: 8, border: "1px solid rgba(243,186,47,0.15)", marginTop: 8 }}>
                 ⚠ Unverified token — always check the contract address before swapping.
               </div>
             )}
+
+            {selectedRoute && <PriceImpactWarning route={selectedRoute} amount={amount} toToken={toToken} />}
+
             {error && <div style={{ fontSize: 12, fontFamily: "monospace", color: "#FC8181", textAlign: "center", padding: 10, background: "rgba(252,129,129,0.06)", borderRadius: 10, border: "1px solid rgba(252,129,129,0.15)", marginTop: 8 }}>{error}</div>}
           </div>
 
@@ -584,7 +590,7 @@ export function SwapInterface() {
             </div>
           )}
 
-          <div style={{ fontSize: 11, fontFamily: "monospace", color: "#1C2A3A", textAlign: "center", marginTop: 20 }}>Powered by LI.FI &nbsp;·&nbsp; ETH &nbsp;·&nbsp; MATIC &nbsp;·&nbsp; BNB &nbsp;·&nbsp; ARB &nbsp;·&nbsp; OP</div>
+          <div style={{ fontSize: 11, fontFamily: "monospace", color: "#1C2A3A", textAlign: "center", marginTop: 20 }}>Powered by LI.FI &nbsp;·&nbsp; ETH &nbsp;·&nbsp; MATIC &nbsp;·&nbsp; BNB &nbsp;·&nbsp; ARB &nbsp;·&nbsp; OP &nbsp;·&nbsp; BASE</div>
         </div>
       </div>
     </>
