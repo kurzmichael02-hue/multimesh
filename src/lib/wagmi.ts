@@ -1,17 +1,18 @@
 import { getDefaultConfig } from "@rainbow-me/rainbowkit";
-import { mainnet, polygon, bsc, sepolia, arbitrum, optimism } from "wagmi/chains";
+import { mainnet, polygon, bsc, sepolia, arbitrum, optimism, base } from "wagmi/chains";
 import { http } from "wagmi";
 
 export const config = getDefaultConfig({
   appName: "MultiMesh",
   projectId: "29975bd3e0414e493cdfa9979d53cd40",
-  chains: [mainnet, polygon, bsc, arbitrum, optimism, sepolia],
+  chains: [mainnet, polygon, bsc, arbitrum, optimism, base, sepolia],
   transports: {
     [mainnet.id]:   http("https://eth.llamarpc.com"),
     [polygon.id]:   http("https://polygon.llamarpc.com"),
     [bsc.id]:       http("https://binance.llamarpc.com"),
     [arbitrum.id]:  http("https://arbitrum.llamarpc.com"),
     [optimism.id]:  http("https://optimism.llamarpc.com"),
+[base.id]:      http("https://base.llamarpc.com"),
     [sepolia.id]:   http("https://rpc.sepolia.org"),
   },
   ssr: true,
@@ -23,6 +24,7 @@ export const SUPPORTED_CHAINS = [
   { id: 56,       name: "BNB Chain", symbol: "BNB",   logo: "◈", color: "#F3BA2F" },
   { id: 42161,    name: "Arbitrum",  symbol: "ETH",   logo: "◎", color: "#28A0F0" },
   { id: 10,       name: "Optimism",  symbol: "ETH",   logo: "◉", color: "#FF0420" },
+  { id: 8453, name: "Base", symbol: "ETH", logo: "⬟", color: "#0052FF" },
   { id: 11155111, name: "Sepolia",   symbol: "ETH",   logo: "⟠", color: "#627EEA" },
 ];
 
@@ -54,7 +56,13 @@ export const SUPPORTED_TOKENS: Record<number, Token[]> = {
     { symbol: "USDC", name: "USD Coin", address: "0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85", decimals: 6,  logo: "◎" },
     { symbol: "USDT", name: "Tether",   address: "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58", decimals: 6,  logo: "₮" },
     { symbol: "OP",   name: "Optimism", address: "0x4200000000000000000000000000000000000042", decimals: 18, logo: "◉" },
+    
   ],
+  8453: [
+  { symbol: "ETH",  name: "Ethereum", address: "0x0000000000000000000000000000000000000000", decimals: 18, logo: "⟠" },
+  { symbol: "USDC", name: "USD Coin", address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", decimals: 6,  logo: "◎" },
+  { symbol: "USDT", name: "Tether",   address: "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2", decimals: 6,  logo: "₮" },
+],
   11155111: [
     { symbol: "ETH", name: "Sepolia ETH", address: "0x0000000000000000000000000000000000000000", decimals: 18, logo: "⟠" },
   ],
