@@ -468,8 +468,11 @@ export function SwapInterface() {
             </div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <button onClick={() => setShowHistory(true)} style={{ padding: "6px 12px", borderRadius: 9, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", color: "#3D4F6B", fontSize: 11, fontFamily: "monospace", cursor: "pointer", letterSpacing: 1 }}>
-                HISTORY
-              </button>
+  HISTORY
+</button>
+<a href="/points" style={{ padding: "6px 12px", borderRadius: 9, background: "rgba(0,229,255,0.06)", border: "1px solid rgba(0,229,255,0.15)", color: "#00E5FF", fontSize: 11, fontFamily: "monospace", cursor: "pointer", letterSpacing: 1, textDecoration: "none" }}>
+  POINTS ✦
+</a>
               {/* Settings button with slippage panel */}
               <div ref={settingsRef} style={{ position: "relative" }}>
                 <button onClick={() => setShowSlippage(s => !s)} style={{ padding: "6px 10px", borderRadius: 9, background: showSlippage ? "rgba(0,229,255,0.08)" : "rgba(255,255,255,0.03)", border: showSlippage ? "1px solid rgba(0,229,255,0.2)" : "1px solid rgba(255,255,255,0.07)", color: slippage !== 5 ? "#00E5FF" : "#3D4F6B", fontSize: 11, fontFamily: "monospace", cursor: "pointer", letterSpacing: 1 }}>
