@@ -138,7 +138,7 @@ export default function Home() {
           <div className="nav-links" style={{ display:"flex", gap:24 }}>
             <a href="#how" className="nav-link">How it works</a>
             <a href="#why" className="nav-link">Why MultiMesh</a>
-            <a href="/points" className="nav-link" style={{ color:"#818CF8" }}>Points</a>
+            <a href="/points" className="nav-link">Points</a>
             <a href="/docs" className="nav-link">Docs</a>
           </div>
         </div>
@@ -248,7 +248,7 @@ export default function Home() {
         <div className="team-grid" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
           {[
             { name:"Michael Kurz", role:"Co-Founder & Engineer", desc:"Full-stack developer building MultiMesh's infrastructure, routing engine, and product." },
-            { name:"Tomide Akinrodoye", role:"Co-Founder & Product", desc:"Product direction, community, and business development. Based in Angola." },
+{ name:"Tomide Akinrodoye", role:"Founder & Product", desc:"Product direction, community, and business development. Based in Angola." },
           ].map(m => (
             <div key={m.name} style={{ background:"rgba(10,12,22,0.8)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:16, padding:"24px" }}>
               <div style={{ width:44, height:44, borderRadius:"50%", background:"linear-gradient(135deg,#6366F1,#8B5CF6)", marginBottom:14, display:"flex", alignItems:"center", justifyContent:"center", fontSize:16, fontWeight:700, color:"#fff", fontFamily:"'Space Grotesk',sans-serif" }}>
