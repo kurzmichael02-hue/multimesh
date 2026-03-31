@@ -82,7 +82,7 @@ export const CHAIN_GAS_SYMBOL: Record<number, string> = {
   8453:  "ETH",
 };
 
-const MULTIMESH_FEE_WALLET = "0xf60EA8a04555D87c9b252096cE98197f87cC080e";
+const MULTIMESH_FEE_WALLET = "0x4070665b35b032A27413dd19BEB5C81b687e28A8";
 
 // Check if user has enough gas on destination chain
 export async function checkDestinationGas(
