@@ -61,7 +61,7 @@ export default function Home() {
 
   return (
     <div style={{ minHeight: "100vh", background: "#04060E", fontFamily: "'DM Sans', sans-serif", color: "#EEF2FF", overflowX: "hidden" }}>
-      <style>{`
+      <style dangerouslySetInnerHTML={{__html: `
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: #04060E; }
@@ -99,7 +99,7 @@ export default function Home() {
           .steps-grid { grid-template-columns: 1fr !important; }
           .chains-wrap { gap: 8px !important; }
         }
-      `}</style>
+      `}} />
 
       {/* Cookie Banner */}
       {!cookieAccepted && (
