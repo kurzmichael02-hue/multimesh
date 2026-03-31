@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useSwapExecution } from "@/hooks/useSwapExecution";
@@ -17,7 +17,7 @@ const CHAINS = [
 
 function Img({ src, size = 24 }: { src: string; size?: number }) {
   const [err, setErr] = useState(false);
-  if (err) return <div style={{ width: size, height: size, borderRadius: "50%", background: "#1C2333", flexShrink: 0 }} />;
+  if (err) return <div style={{ width: size, height: size, borderRadius: "50%", background: "#1A1F2E", flexShrink: 0 }} />;
   return <img src={src} width={size} height={size} style={{ borderRadius: "50%", flexShrink: 0, objectFit: "cover" }} onError={() => setErr(true)} />;
 }
 
@@ -39,39 +39,34 @@ export default function RefuelPage() {
     setLoading(true); setError(""); setQuote(null);
     try {
       const amountWei = ethers.parseEther(amount).toString();
-      const q = await getRefuelQuote({
-        fromChainId: fromChain.id,
-        toChainId: toChain.id,
-        fromAddress: address,
-        toAddress: address,
-        fromAmount: amountWei,
-      });
+      const q = await getRefuelQuote({ fromChainId: fromChain.id, toChainId: toChain.id, fromAddress: address, toAddress: address, fromAmount: amountWei });
       if (!q) throw new Error("No refuel route found");
       setQuote(q);
-    } catch (e: any) {
-      setError(e?.message ?? "Could not find a refuel route");
-    }
+    } catch (e: any) { setError(e?.message ?? "Could not find a refuel route"); }
     setLoading(false);
   };
 
-  const executeRefuel = async () => {
-    if (!quote) return;
-    swap.execute(quote);
-  };
-
   return (
-    <div style={{ minHeight: "100vh", background: "#060810", fontFamily: "'DM Sans', sans-serif", color: "#F0F4FF", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 16px" }}>
-      <style>{`@keyframes mmSpin{to{transform:rotate(360deg)}} * { box-sizing: border-box; }`}</style>
+    <div style={{ minHeight: "100vh", background: "#04060E", fontFamily: "'DM Sans', sans-serif", color: "#EEF2FF", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 16px" }}>
+      <style dangerouslySetInnerHTML={{__html: `
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+        * { box-sizing: border-box; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .chain-btn { transition: all 0.15s; }
+        .chain-btn:hover { border-color: rgba(99,102,241,0.4) !important; }
+        .btn-primary { transition: all 0.2s; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(99,102,241,0.3); }
+      `}} />
 
-      {/* Execution modals */}
+      {/* Modals */}
       {swap.step !== "idle" && swap.step !== "done" && swap.step !== "failed" && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 16 }}>
-          <div style={{ width: "100%", maxWidth: 360, background: "#0D1117", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: 20 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: "#F0F4FF", marginBottom: 12 }}>Sending Gas...</div>
-            <div style={{ fontSize: 12, color: "#A0B0C8", fontFamily: "monospace" }}>
+          <div style={{ width: "100%", maxWidth: 360, background: "#0A0C16", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 16, padding: 20 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>Sending Gas...</div>
+            <div style={{ fontSize: 12, color: "#6B7FA3", fontFamily: "monospace" }}>
               {swap.step === "sending" && "Confirm in wallet..."}
               {swap.step === "waiting-tx" && "Waiting for confirmation..."}
-              {swap.step === "polling" && "Bridging gas to destination..."}
+              {swap.step === "polling" && "Bridging to destination..."}
             </div>
           </div>
         </div>
@@ -79,104 +74,107 @@ export default function RefuelPage() {
 
       {swap.step === "done" && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 16 }}>
-          <div style={{ width: "100%", maxWidth: 360, background: "#0D1117", border: "1px solid rgba(0,229,255,0.3)", borderRadius: 16, padding: 20 }}>
-            <div style={{ fontSize: 15, fontWeight: 700, color: "#00E5FF", marginBottom: 8 }}>⚡ Gas Sent!</div>
-            <div style={{ fontSize: 13, color: "#A0B0C8", marginBottom: 16 }}>{gasSymbol} is on its way to {toChain.name}.</div>
-            {swap.explorerLink && <a href={swap.explorerLink} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: "#00E5FF", fontFamily: "monospace" }}>View on LI.FI Explorer ↗</a>}
-            <button onClick={swap.reset} style={{ width: "100%", marginTop: 14, padding: 12, borderRadius: 10, background: "transparent", color: "#00E5FF", border: "1px solid rgba(0,229,255,0.3)", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>Done</button>
+          <div style={{ width: "100%", maxWidth: 360, background: "#0A0C16", border: "1px solid rgba(99,102,241,0.3)", borderRadius: 16, padding: 24 }}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: "#818CF8", marginBottom: 8, fontFamily: "'Space Grotesk',sans-serif" }}>Gas Sent!</div>
+            <div style={{ fontSize: 13, color: "#6B7FA3", marginBottom: 16 }}>{gasSymbol} is on its way to {toChain.name}.</div>
+            {swap.explorerLink && <a href={swap.explorerLink} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: "#818CF8", fontFamily: "monospace" }}>View on LI.FI Explorer ↗</a>}
+            <button onClick={swap.reset} style={{ width: "100%", marginTop: 14, padding: 12, borderRadius: 10, background: "transparent", color: "#818CF8", border: "1px solid rgba(99,102,241,0.3)", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>Done</button>
           </div>
         </div>
       )}
 
       {swap.step === "failed" && (
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 16 }}>
-          <div style={{ width: "100%", maxWidth: 360, background: "#0D1117", border: "1px solid rgba(252,129,129,0.3)", borderRadius: 16, padding: 20 }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: "#FC8181", marginBottom: 8 }}>Refuel Failed</div>
-            {swap.error && <div style={{ fontSize: 11, fontFamily: "monospace", color: "#A0B0C8", marginBottom: 14 }}>{swap.error}</div>}
-            <button onClick={swap.reset} style={{ width: "100%", padding: 12, borderRadius: 10, background: "transparent", color: "#FC8181", border: "1px solid rgba(252,129,129,0.3)", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>Try Again</button>
+          <div style={{ width: "100%", maxWidth: 360, background: "#0A0C16", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 16, padding: 20 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: "#F87171", marginBottom: 8 }}>Refuel Failed</div>
+            {swap.error && <div style={{ fontSize: 11, fontFamily: "monospace", color: "#6B7FA3", marginBottom: 14 }}>{swap.error}</div>}
+            <button onClick={swap.reset} style={{ width: "100%", padding: 12, borderRadius: 10, background: "transparent", color: "#F87171", border: "1px solid rgba(239,68,68,0.3)", fontWeight: 700, fontSize: 13, cursor: "pointer" }}>Try Again</button>
           </div>
         </div>
       )}
 
-      <div style={{ width: "100%", maxWidth: 420 }}>
+      <div style={{ width: "100%", maxWidth: 440 }}>
         {/* Nav */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32 }}>
-          <a href="/" style={{ fontSize: 16, fontWeight: 700, color: "#F0F4FF", textDecoration: "none" }}>
-            MULTI<span style={{ color: "#00E5FF" }}>MESH</span>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 40 }}>
+          <a href="/" style={{ textDecoration: "none" }}>
+            <span style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Space Grotesk',sans-serif", color: "#EEF2FF" }}>MULTI</span>
+            <span style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Space Grotesk',sans-serif", color: "#818CF8" }}>MESH</span>
           </a>
-          <ConnectButton chainStatus="none" showBalance={false} />
+          <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
+            <a href="/points" style={{ fontSize: 13, color: "#6B7FA3", textDecoration: "none" }}>Points</a>
+            <ConnectButton chainStatus="none" showBalance={false} />
+          </div>
         </div>
 
         {/* Hero */}
         <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <div style={{ fontSize: 36, marginBottom: 8 }}>⚡</div>
-          <div style={{ fontSize: 24, fontWeight: 700, letterSpacing: -0.5, marginBottom: 8 }}>Gas Refuel</div>
-          <div style={{ fontSize: 14, color: "#6B7FA3", lineHeight: 1.6 }}>
-            Stuck on a chain without gas? Bridge native tokens in one click.
-          </div>
+          <div style={{ fontSize: 11, fontFamily: "monospace", color: "#4B5A72", letterSpacing: 2, marginBottom: 12 }}>GAS REFUEL</div>
+          <h1 style={{ fontSize: 28, fontWeight: 700, fontFamily: "'Space Grotesk',sans-serif", letterSpacing: -0.5, marginBottom: 10 }}>
+            Stuck without gas?
+          </h1>
+          <p style={{ fontSize: 14, color: "#6B7FA3", lineHeight: 1.7 }}>
+            Bridge native tokens to any chain in one click.
+          </p>
         </div>
 
         {/* Card */}
-        <div style={{ background: "rgba(13,17,23,0.95)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 20, padding: 20 }}>
+        <div style={{ background: "rgba(10,12,22,0.95)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 20, padding: 20 }}>
 
           {/* From */}
-          <div style={{ background: "rgba(6,8,16,0.8)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 12, padding: "12px 14px", marginBottom: 8 }}>
-            <div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1.5, marginBottom: 10 }}>FROM</div>
+          <div style={{ background: "rgba(4,6,14,0.8)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 12, padding: "12px 14px", marginBottom: 8 }}>
+            <div style={{ fontSize: 10, fontFamily: "monospace", color: "#4B5A72", letterSpacing: 1.5, marginBottom: 10 }}>FROM</div>
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <input type="number" value={amount} onChange={e => { setAmount(e.target.value); setQuote(null); }}
-                style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: 22, fontWeight: 700, color: "#F0F4FF" }} />
+                style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: 22, fontWeight: 700, color: "#EEF2FF", fontFamily: "'DM Sans',sans-serif" }} />
               <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
                 {CHAINS.map(c => (
-                  <button key={c.id} onClick={() => { setFromChain(c); setQuote(null); }}
-                    style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 8px", borderRadius: 8, background: fromChain.id === c.id ? "rgba(0,229,255,0.1)" : "rgba(255,255,255,0.03)", border: fromChain.id === c.id ? "1px solid rgba(0,229,255,0.3)" : "1px solid rgba(255,255,255,0.06)", cursor: "pointer" }}>
+                  <button key={c.id} className="chain-btn" onClick={() => { setFromChain(c); setQuote(null); }}
+                    style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 8px", borderRadius: 8, background: fromChain.id === c.id ? "rgba(99,102,241,0.12)" : "rgba(255,255,255,0.03)", border: fromChain.id === c.id ? "1px solid rgba(99,102,241,0.4)" : "1px solid rgba(255,255,255,0.06)", cursor: "pointer" }}>
                     <Img src={c.logo} size={16} />
-                    <span style={{ fontSize: 11, fontWeight: 600, color: fromChain.id === c.id ? "#00E5FF" : "#6B7FA3" }}>{c.name}</span>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: fromChain.id === c.id ? "#818CF8" : "#6B7FA3" }}>{c.name}</span>
                   </button>
                 ))}
               </div>
             </div>
           </div>
 
-          {/* Arrow */}
-          <div style={{ textAlign: "center", padding: "4px 0", fontSize: 18, color: "#3D4F6B" }}>↓</div>
+          <div style={{ textAlign: "center", padding: "4px 0", fontSize: 18, color: "#4B5A72" }}>↓</div>
 
           {/* To */}
-          <div style={{ background: "rgba(6,8,16,0.8)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 12, padding: "12px 14px", marginBottom: 16 }}>
-            <div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1.5, marginBottom: 10 }}>TO (DESTINATION CHAIN)</div>
+          <div style={{ background: "rgba(4,6,14,0.8)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 12, padding: "12px 14px", marginBottom: 16 }}>
+            <div style={{ fontSize: 10, fontFamily: "monospace", color: "#4B5A72", letterSpacing: 1.5, marginBottom: 10 }}>TO</div>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               {CHAINS.filter(c => c.id !== fromChain.id).map(c => (
-                <button key={c.id} onClick={() => { setToChain(c); setQuote(null); }}
-                  style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 10px", borderRadius: 9, background: toChain.id === c.id ? "rgba(0,229,255,0.1)" : "rgba(255,255,255,0.03)", border: toChain.id === c.id ? "1px solid rgba(0,229,255,0.3)" : "1px solid rgba(255,255,255,0.06)", cursor: "pointer" }}>
+                <button key={c.id} className="chain-btn" onClick={() => { setToChain(c); setQuote(null); }}
+                  style={{ display: "flex", alignItems: "center", gap: 5, padding: "7px 10px", borderRadius: 9, background: toChain.id === c.id ? "rgba(99,102,241,0.12)" : "rgba(255,255,255,0.03)", border: toChain.id === c.id ? "1px solid rgba(99,102,241,0.4)" : "1px solid rgba(255,255,255,0.06)", cursor: "pointer" }}>
                   <Img src={c.logo} size={18} />
-                  <span style={{ fontSize: 12, fontWeight: 600, color: toChain.id === c.id ? "#00E5FF" : "#A0B0C8" }}>{c.name}</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: toChain.id === c.id ? "#818CF8" : "#A0B0C8" }}>{c.name}</span>
                 </button>
               ))}
             </div>
-            {toChain && (
-              <div style={{ marginTop: 10, fontSize: 11, fontFamily: "monospace", color: "#3D4F6B" }}>
-                Min recommended: ~${minUSD} of {gasSymbol}
-              </div>
-            )}
+            <div style={{ marginTop: 10, fontSize: 11, fontFamily: "monospace", color: "#4B5A72" }}>
+              Min recommended: ~${minUSD} of {gasSymbol}
+            </div>
           </div>
 
-          {/* Quote info */}
+          {/* Quote */}
           {quote && (
-            <div style={{ padding: "10px 14px", background: "rgba(0,229,255,0.04)", border: "1px solid rgba(0,229,255,0.12)", borderRadius: 10, marginBottom: 12 }}>
-              <div style={{ display: "flex", gap: 16 }}>
+            <div style={{ padding: "10px 14px", background: "rgba(99,102,241,0.06)", border: "1px solid rgba(99,102,241,0.15)", borderRadius: 10, marginBottom: 12 }}>
+              <div style={{ display: "flex", gap: 20 }}>
                 <div>
-                  <div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1 }}>YOU RECEIVE</div>
-                  <div style={{ fontSize: 13, fontFamily: "monospace", color: "#00E5FF", marginTop: 2 }}>
+                  <div style={{ fontSize: 10, fontFamily: "monospace", color: "#4B5A72", letterSpacing: 1 }}>YOU RECEIVE</div>
+                  <div style={{ fontSize: 13, fontFamily: "monospace", color: "#818CF8", marginTop: 2 }}>
                     ~{parseFloat(ethers.formatEther(quote.toAmount ?? "0")).toFixed(4)} {gasSymbol}
                   </div>
                 </div>
                 <div>
-                  <div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1 }}>TIME</div>
+                  <div style={{ fontSize: 10, fontFamily: "monospace", color: "#4B5A72", letterSpacing: 1 }}>TIME</div>
                   <div style={{ fontSize: 13, fontFamily: "monospace", color: "#A0B0C8", marginTop: 2 }}>
                     {quote.executionDuration < 60 ? `~${quote.executionDuration}s` : `~${Math.ceil(quote.executionDuration / 60)}m`}
                   </div>
                 </div>
                 <div>
-                  <div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1 }}>BRIDGE FEE</div>
+                  <div style={{ fontSize: 10, fontFamily: "monospace", color: "#4B5A72", letterSpacing: 1 }}>FEE</div>
                   <div style={{ fontSize: 13, fontFamily: "monospace", color: "#A0B0C8", marginTop: 2 }}>
                     ${parseFloat(quote.gasCostUSD ?? "0").toFixed(2)}
                   </div>
@@ -186,34 +184,33 @@ export default function RefuelPage() {
           )}
 
           {error && (
-            <div style={{ fontSize: 11, fontFamily: "monospace", color: "#FC8181", padding: "8px 12px", background: "rgba(252,129,129,0.06)", borderRadius: 8, marginBottom: 12 }}>
+            <div style={{ fontSize: 11, fontFamily: "monospace", color: "#F87171", padding: "8px 12px", background: "rgba(239,68,68,0.06)", borderRadius: 8, marginBottom: 12 }}>
               {error}
             </div>
           )}
 
-          {/* Button */}
           {!address ? (
             <div style={{ display: "flex", justifyContent: "center" }}><ConnectButton /></div>
           ) : !quote ? (
-            <button onClick={fetchQuote} disabled={loading || !amount}
-              style={{ width: "100%", padding: 14, borderRadius: 12, background: loading || !amount ? "#0D1520" : "#00E5FF", color: loading || !amount ? "#2D3F52" : "#060810", border: "none", fontWeight: 700, fontSize: 14, cursor: loading || !amount ? "not-allowed" : "pointer" }}>
+            <button className="btn-primary" onClick={fetchQuote} disabled={loading || !amount}
+              style={{ width: "100%", padding: 14, borderRadius: 12, background: loading || !amount ? "#0D1020" : "#6366F1", color: loading || !amount ? "#2D3A50" : "#fff", border: "none", fontWeight: 700, fontSize: 14, cursor: loading || !amount ? "not-allowed" : "pointer" }}>
               {loading ? (
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                  <div style={{ width: 14, height: 14, border: "2px solid rgba(6,8,16,0.3)", borderTopColor: "#060810", borderRadius: "50%", animation: "mmSpin 0.7s linear infinite" }} />
+                  <div style={{ width: 14, height: 14, border: "2px solid rgba(255,255,255,0.2)", borderTopColor: "#fff", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
                   Finding Route...
                 </div>
               ) : "Get Refuel Quote"}
             </button>
           ) : (
-            <button onClick={executeRefuel}
-              style={{ width: "100%", padding: 14, borderRadius: 12, background: "#00E5FF", color: "#060810", border: "none", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
-              ⚡ Send Gas to {toChain.name}
+            <button className="btn-primary" onClick={() => swap.execute(quote)}
+              style={{ width: "100%", padding: 14, borderRadius: 12, background: "#6366F1", color: "#fff", border: "none", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+              Send Gas to {toChain.name} →
             </button>
           )}
         </div>
 
-        <div style={{ textAlign: "center", marginTop: 16, fontSize: 11, fontFamily: "monospace", color: "#1C2A3A" }}>
-          Powered by MultiMesh · <a href="/" style={{ color: "#3D4F6B", textDecoration: "none" }}>Back to App</a>
+        <div style={{ textAlign: "center", marginTop: 16, fontSize: 11, fontFamily: "monospace", color: "#2D3A50" }}>
+          Powered by MultiMesh · <a href="/" style={{ color: "#4B5A72", textDecoration: "none" }}>Back to App</a>
         </div>
       </div>
     </div>
