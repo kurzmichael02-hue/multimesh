@@ -69,8 +69,9 @@ function Navbar() {
   return (
     <nav style={{ position:"sticky", top:0, zIndex:50, borderBottom:"1px solid rgba(255,255,255,0.05)", background:"rgba(4,6,14,0.95)", backdropFilter:"blur(12px)", padding:"0 28px", height:60, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
       <Link href="/" style={{ textDecoration:"none" }}>
-        <span style={{ fontSize:16, fontWeight:700, fontFamily:"'Space Grotesk',sans-serif", color:"#EEF2FF" }}>MULTI</span>
-        <span style={{ fontSize:16, fontWeight:700, fontFamily:"'Space Grotesk',sans-serif", color:"#818CF8" }}>MESH</span>
+        <img src="/logo.jpg" width={32} height={32} style={{ borderRadius: "50%", mixBlendMode: "screen", marginRight: 8 }} />
+<span style={{ fontSize:17, fontWeight:700, fontFamily:"'Space Grotesk', sans-serif", color:"#EEF2FF" }}>MULTI</span>
+<span style={{ fontSize:17, fontWeight:700, fontFamily:"'Space Grotesk', sans-serif", color:"#818CF8" }}>MESH</span>
       </Link>
       <div style={{ display:"flex", gap:24, alignItems:"center" }}>
         {[

@@ -97,8 +97,9 @@ export default function RefuelPage() {
         {/* Nav */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 40 }}>
           <a href="/" style={{ textDecoration: "none" }}>
-            <span style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Space Grotesk',sans-serif", color: "#EEF2FF" }}>MULTI</span>
-            <span style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Space Grotesk',sans-serif", color: "#818CF8" }}>MESH</span>
+            <img src="/logo.jpg" width={32} height={32} style={{ borderRadius: "50%", mixBlendMode: "screen", marginRight: 8 }} />
+<span style={{ fontSize:17, fontWeight:700, fontFamily:"'Space Grotesk', sans-serif", color:"#EEF2FF" }}>MULTI</span>
+<span style={{ fontSize:17, fontWeight:700, fontFamily:"'Space Grotesk', sans-serif", color:"#818CF8" }}>MESH</span>
           </a>
           <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
             <a href="/points" style={{ fontSize: 13, color: "#6B7FA3", textDecoration: "none" }}>Points</a>

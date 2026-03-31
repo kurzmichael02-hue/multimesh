@@ -132,8 +132,9 @@ export default function Home() {
       }}>
         <div style={{ display:"flex", alignItems:"center", gap:32 }}>
           <div>
-            <span style={{ fontSize:17, fontWeight:700, fontFamily:"'Space Grotesk', sans-serif", letterSpacing:-0.5, color:"#EEF2FF" }}>MULTI</span>
-            <span style={{ fontSize:17, fontWeight:700, fontFamily:"'Space Grotesk', sans-serif", letterSpacing:-0.5, color:"#818CF8" }}>MESH</span>
+            <img src="/logo.jpg" width={32} height={32} style={{ borderRadius: "50%", mixBlendMode: "screen", marginRight: 8 }} />
+<span style={{ fontSize:17, fontWeight:700, fontFamily:"'Space Grotesk', sans-serif", color:"#EEF2FF" }}>MULTI</span>
+<span style={{ fontSize:17, fontWeight:700, fontFamily:"'Space Grotesk', sans-serif", color:"#818CF8" }}>MESH</span>
           </div>
           <div className="nav-links" style={{ display:"flex", gap:24 }}>
             <a href="#how" className="nav-link">How it works</a>
