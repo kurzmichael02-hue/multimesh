@@ -189,7 +189,7 @@ export default function Home() {
           { name: "BNB",      logo: "https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png" },
           { name: "Arbitrum", logo: "https://assets.coingecko.com/coins/images/16547/small/photo_2023-03-29_21.47.00.jpeg" },
           { name: "Optimism", logo: "https://assets.coingecko.com/coins/images/25244/small/Optimism.png" },
-          { name: "Base", logo: "https://assets.coingecko.com/coins/images/35506/small/base.png" },
+          { name: "Base", logo: "https://assets.coingecko.com/coins/images/35506/thumb/base-logo.webp" },
         ].map(c => (
           <div key={c.name} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 14px", background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 10 }}>
             <img src={c.logo} width={20} height={20} style={{ borderRadius: "50%" }} />
