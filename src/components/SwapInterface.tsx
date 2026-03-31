@@ -584,7 +584,7 @@ export function SwapInterface() {
 
           {!loading && routes.length > 0 && (
             <div style={{ marginTop: 12 }}>
-              <button onClick={() => { if (address && selectedRoute?.transactionRequest) { swap.execute(selectedRoute); } else { setShowTx(true); } }} style={{ width: "100%", padding: 15, borderRadius: 14, background: "#00E5FF", color: "#060810", border: "none", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
+              <button onClick={() => { if (address && selectedRoute) { swap.execute(selectedRoute); } else if (!address) { alert("Connect your wallet first"); } }} style={{ width: "100%", padding: 15, borderRadius: 14, background: "#00E5FF", color: "#060810", border: "none", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
                 {address ? "Swap Now" : "Connect Wallet to Swap"}
               </button>
             </div>
