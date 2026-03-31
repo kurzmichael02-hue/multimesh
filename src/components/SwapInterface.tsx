@@ -34,36 +34,18 @@ const CHAIN_NAMES: Record<number, string> = {
 };
 
 interface SwapHistoryEntry {
-  id: string;
-  timestamp: number;
-  fromChain: string;
-  toChain: string;
-  fromToken: string;
-  toToken: string;
-  fromAmount: string;
-  toAmount: string;
-  txHash: string;
-  explorerLink?: string;
+  id: string; timestamp: number; fromChain: string; toChain: string;
+  fromToken: string; toToken: string; fromAmount: string; toAmount: string;
+  txHash: string; explorerLink?: string;
 }
 
 const HISTORY_KEY = "multimesh_swap_history";
-
 function loadHistory(): SwapHistoryEntry[] {
   try { const raw = localStorage.getItem(HISTORY_KEY); return raw ? JSON.parse(raw) : []; } catch { return []; }
 }
-
 function saveHistory(entries: SwapHistoryEntry[]) {
   try { localStorage.setItem(HISTORY_KEY, JSON.stringify(entries.slice(0, 50))); } catch {}
 }
-
-type TxStatus = "idle" | "pending" | "bridging" | "swapping" | "done";
-const TX_STEPS: TxStatus[] = ["pending", "bridging", "swapping", "done"];
-const TX_META: Record<string, { label: string; detail: string; color: string }> = {
-  pending:  { label: "Waiting for confirmation", detail: "Confirm the transaction in your wallet", color: "#A0B0C8" },
-  bridging: { label: "Bridging assets",           detail: "Moving your tokens across chains...",    color: "#7B61FF" },
-  swapping: { label: "Swapping tokens",            detail: "Executing swap on destination chain",   color: "#F3BA2F" },
-  done:     { label: "Transaction complete",       detail: "Your tokens have arrived",              color: "#00E5FF" },
-};
 
 const SLIPPAGE_OPTIONS = [0.5, 1, 3, 5];
 
@@ -86,8 +68,8 @@ function SlippagePanel({ slippage, onChange, onClose }: { slippage: number; onCh
   const ref = useRef<HTMLDivElement>(null!);
   useOutsideClick(ref, onClose);
   return (
-    <div ref={ref} style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: "#0D1117", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: 16, zIndex: 150, width: 240, boxShadow: "0 16px 40px rgba(0,0,0,0.6)" }}>
-      <div style={{ fontSize: 11, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1, marginBottom: 10 }}>SLIPPAGE TOLERANCE</div>
+    <div ref={ref} style={{ position: "absolute", top: "calc(100% + 8px)", right: 0, background: "#0D1117", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: 16, zIndex: 150, width: 220, boxShadow: "0 16px 40px rgba(0,0,0,0.6)" }}>
+      <div style={{ fontSize: 11, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1, marginBottom: 10 }}>SLIPPAGE</div>
       <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
         {SLIPPAGE_OPTIONS.map(opt => (
           <button key={opt} onClick={() => { onChange(opt); setCustom(""); }}
@@ -96,11 +78,9 @@ function SlippagePanel({ slippage, onChange, onClose }: { slippage: number; onCh
           </button>
         ))}
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-        <input value={custom} onChange={e => { setCustom(e.target.value); const v = parseFloat(e.target.value); if (!isNaN(v) && v > 0 && v <= 50) onChange(v); }} placeholder="Custom %"
-          style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "6px 10px", fontSize: 12, fontFamily: "monospace", color: "#F0F4FF", outline: "none" }} />
-      </div>
-      {slippage > 5 && <div style={{ fontSize: 10, fontFamily: "monospace", color: "#F3BA2F", marginTop: 6 }}>⚠ High slippage — use with caution</div>}
+      <input value={custom} onChange={e => { setCustom(e.target.value); const v = parseFloat(e.target.value); if (!isNaN(v) && v > 0 && v <= 50) onChange(v); }} placeholder="Custom %"
+        style={{ width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "6px 10px", fontSize: 12, fontFamily: "monospace", color: "#F0F4FF", outline: "none" }} />
+      {slippage > 5 && <div style={{ fontSize: 10, fontFamily: "monospace", color: "#F3BA2F", marginTop: 6 }}>⚠ High slippage</div>}
     </div>
   );
 }
@@ -111,13 +91,13 @@ function ChainDropdown({ value, onChange }: { value: typeof SUPPORTED_CHAINS[0];
   useOutsideClick(ref, () => setOpen(false));
   return (
     <div ref={ref} style={{ position: "relative" }}>
-      <button onClick={() => setOpen(o => !o)} style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, padding: "5px 10px 5px 6px", cursor: "pointer" }}>
-        <Img src={CHAIN_LOGOS[value.id]} size={16} />
-        <span style={{ fontSize: 12, fontWeight: 600, color: "#A0B0C8" }}>{value.name}</span>
-        <span style={{ fontSize: 9, color: "#3D4F6B" }}>▾</span>
+      <button onClick={() => setOpen(o => !o)} style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, padding: "4px 8px 4px 5px", cursor: "pointer" }}>
+        <Img src={CHAIN_LOGOS[value.id]} size={14} />
+        <span style={{ fontSize: 11, fontWeight: 600, color: "#A0B0C8", maxWidth: 70, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{value.name}</span>
+        <span style={{ fontSize: 8, color: "#3D4F6B" }}>▾</span>
       </button>
       {open && (
-        <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, background: "#0D1117", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: 6, zIndex: 100, minWidth: 170, boxShadow: "0 16px 40px rgba(0,0,0,0.6)" }}>
+        <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, background: "#0D1117", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: 6, zIndex: 100, minWidth: 160, boxShadow: "0 16px 40px rgba(0,0,0,0.6)" }}>
           {SUPPORTED_CHAINS.map(c => (
             <button key={c.id} onClick={() => { onChange(c); setOpen(false); }}
               style={{ display: "flex", alignItems: "center", gap: 8, width: "100%", padding: "8px 10px", background: c.id === value.id ? "rgba(0,229,255,0.06)" : "transparent", border: "none", borderRadius: 8, cursor: "pointer" }}>
@@ -154,24 +134,24 @@ function TokenDropdown({ value, tokens, onChange, chainId }: { value: Token; tok
 
   return (
     <div ref={ref} style={{ position: "relative" }}>
-      <button onClick={() => setOpen(o => !o)} style={{ display: "flex", alignItems: "center", gap: 8, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "7px 10px 7px 8px", cursor: "pointer", whiteSpace: "nowrap" }}>
-        <Img src={TOKEN_LOGOS[value.symbol] ?? ""} size={22} />
-        <span style={{ fontSize: 15, fontWeight: 700, color: "#F0F4FF" }}>{value.symbol}</span>
-        <span style={{ fontSize: 9, color: "#3D4F6B" }}>▾</span>
+      <button onClick={() => setOpen(o => !o)} style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, padding: "6px 8px 6px 7px", cursor: "pointer", whiteSpace: "nowrap" }}>
+        <Img src={TOKEN_LOGOS[value.symbol] ?? ""} size={20} />
+        <span style={{ fontSize: 14, fontWeight: 700, color: "#F0F4FF" }}>{value.symbol}</span>
+        <span style={{ fontSize: 8, color: "#3D4F6B" }}>▾</span>
       </button>
       {open && (
-        <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, background: "#0D1117", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: 6, zIndex: 100, minWidth: 220, boxShadow: "0 16px 40px rgba(0,0,0,0.6)" }}>
+        <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, background: "#0D1117", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: 6, zIndex: 100, minWidth: 200, boxShadow: "0 16px 40px rgba(0,0,0,0.6)" }}>
           {tokens.map(t => (
             <button key={t.address} onClick={() => { onChange(t); setOpen(false); setCustomAddress(""); setCustomError(""); }}
               style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "8px 10px", background: t.address === value.address ? "rgba(0,229,255,0.06)" : "transparent", border: "none", borderRadius: 8, cursor: "pointer" }}>
-              <Img src={TOKEN_LOGOS[t.symbol] ?? ""} size={24} />
+              <Img src={TOKEN_LOGOS[t.symbol] ?? ""} size={22} />
               <div style={{ textAlign: "left" }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: t.address === value.address ? "#00E5FF" : "#F0F4FF" }}>{t.symbol}</div>
-                <div style={{ fontSize: 11, color: "#3D4F6B" }}>{t.name}</div>
+                <div style={{ fontSize: 10, color: "#3D4F6B" }}>{t.name}</div>
               </div>
             </button>
           ))}
-          <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", marginTop: 6, paddingTop: 8, padding: "8px 6px 4px" }}>
+          <div style={{ borderTop: "1px solid rgba(255,255,255,0.06)", marginTop: 6, padding: "8px 6px 4px" }}>
             <div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1, marginBottom: 6 }}>PASTE CONTRACT ADDRESS</div>
             <div style={{ display: "flex", gap: 6 }}>
               <input value={customAddress} onChange={e => { setCustomAddress(e.target.value); setCustomError(""); }} onKeyDown={e => e.key === "Enter" && handleCustomToken()} placeholder="0x..."
@@ -204,9 +184,9 @@ function HistoryPanel({ onClose }: { onClose: () => void }) {
   useEffect(() => { setHistory(loadHistory()); }, []);
   const fmtDate = (ts: number) => new Date(ts).toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 24 }}>
-      <div style={{ width: "100%", maxWidth: 460, background: "#0D1117", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 24, maxHeight: "80vh", display: "flex", flexDirection: "column" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 16 }}>
+      <div style={{ width: "100%", maxWidth: 460, background: "#0D1117", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 20, maxHeight: "85vh", display: "flex", flexDirection: "column" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <span style={{ fontSize: 15, fontWeight: 700, color: "#F0F4FF" }}>Swap History</span>
           <button onClick={onClose} style={{ background: "none", border: "none", color: "#3D4F6B", cursor: "pointer", fontSize: 20 }}>×</button>
         </div>
@@ -217,7 +197,7 @@ function HistoryPanel({ onClose }: { onClose: () => void }) {
             <div key={h.id} style={{ padding: "12px 14px", background: "rgba(6,8,16,0.8)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 12, marginBottom: 8 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 6 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: "#F0F4FF" }}>{h.fromAmount} {h.fromToken} → {h.toAmount} {h.toToken}</div>
-                <span style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B" }}>{fmtDate(h.timestamp)}</span>
+                <span style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", flexShrink: 0, marginLeft: 8 }}>{fmtDate(h.timestamp)}</span>
               </div>
               <div style={{ fontSize: 11, fontFamily: "monospace", color: "#3D4F6B", marginBottom: 6 }}>{h.fromChain} → {h.toChain}</div>
               {h.explorerLink && <a href={h.explorerLink} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, fontFamily: "monospace", color: "#00E5FF", textDecoration: "none" }}>View on LI.FI Explorer ↗</a>}
@@ -225,92 +205,10 @@ function HistoryPanel({ onClose }: { onClose: () => void }) {
           ))}
         </div>
         {history.length > 0 && (
-          <button onClick={() => { saveHistory([]); setHistory([]); }} style={{ marginTop: 16, width: "100%", padding: 10, borderRadius: 10, background: "transparent", color: "#3D4F6B", border: "1px solid rgba(255,255,255,0.06)", fontSize: 12, fontFamily: "monospace", cursor: "pointer" }}>
+          <button onClick={() => { saveHistory([]); setHistory([]); }} style={{ marginTop: 14, width: "100%", padding: 10, borderRadius: 10, background: "transparent", color: "#3D4F6B", border: "1px solid rgba(255,255,255,0.06)", fontSize: 12, fontFamily: "monospace", cursor: "pointer" }}>
             Clear History
           </button>
         )}
-      </div>
-    </div>
-  );
-}
-
-function TxModal({ route, fromToken, toToken, amount, onClose }: { route: RouteResult; fromToken: Token; toToken: Token; amount: string; onClose: () => void }) {
-  const [status, setStatus] = useState<TxStatus>("idle");
-  const [step, setStep] = useState(0);
-  const delay = (ms: number) => new Promise(r => setTimeout(r, ms));
-  const fmt = (raw: string, dec: number) => { try { return parseFloat(ethers.formatUnits(raw, dec)).toFixed(6); } catch { return "—"; } };
-  const simulate = async () => {
-    setStatus("pending"); setStep(0); await delay(1800);
-    setStatus("bridging"); setStep(1); await delay(2400);
-    setStatus("swapping"); setStep(2); await delay(1800);
-    setStatus("done"); setStep(3);
-  };
-  const meta = status !== "idle" ? TX_META[status] : null;
-  return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 24 }}>
-      <div style={{ width: "100%", maxWidth: 420, background: "#0D1117", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 24, boxShadow: "0 32px 80px rgba(0,0,0,0.7)" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 24 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 15, fontWeight: 700, color: "#F0F4FF" }}>Confirm Swap</span>
-            <span style={{ fontSize: 11, fontFamily: "monospace", color: "#F3BA2F", background: "rgba(243,186,47,0.1)", padding: "2px 8px", borderRadius: 5 }}>SIMULATED</span>
-          </div>
-          {(status === "idle" || status === "done") && <button onClick={onClose} style={{ background: "none", border: "none", color: "#3D4F6B", cursor: "pointer", fontSize: 20, lineHeight: 1, padding: 0 }}>×</button>}
-        </div>
-        <div style={{ background: "rgba(6,8,16,0.8)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, padding: "14px 16px", marginBottom: 20 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>
-              <div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1, marginBottom: 4 }}>YOU SEND</div>
-              <div style={{ fontSize: 22, fontWeight: 700, color: "#F0F4FF" }}>{amount} {fromToken.symbol}</div>
-            </div>
-            <div style={{ fontSize: 20, color: "#3D4F6B" }}>→</div>
-            <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1, marginBottom: 4 }}>YOU RECEIVE</div>
-              <div style={{ fontSize: 22, fontWeight: 700, color: "#00E5FF" }}>{fmt(route.toAmount, toToken.decimals)} {toToken.symbol}</div>
-            </div>
-          </div>
-          <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.04)", display: "flex", gap: 16 }}>
-            {[["FEE", `$${parseFloat(route.gasCostUSD || "0").toFixed(2)}`], ["TIME", route.executionDuration < 60 ? `~${route.executionDuration}s` : `~${Math.ceil(route.executionDuration / 60)}m`], ["VALUE", `~$${parseFloat(route.toAmountUSD || "0").toFixed(2)}`]].map(([l, v]) => (
-              <div key={l}><div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1 }}>{l}</div><div style={{ fontSize: 12, fontFamily: "monospace", color: "#A0B0C8", marginTop: 2 }}>{v}</div></div>
-            ))}
-          </div>
-        </div>
-        {status !== "idle" && (
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", position: "relative", padding: "0 4px" }}>
-              <div style={{ position: "absolute", top: 11, left: "calc(4px + 11px)", right: "calc(4px + 11px)", height: 2, background: "#1C2333", borderRadius: 2 }}>
-                <div style={{ height: "100%", background: "#00E5FF", borderRadius: 2, transition: "width 0.6s ease", width: `${(step / 3) * 100}%` }} />
-              </div>
-              {TX_STEPS.map((s, i) => {
-                const done = i < step || status === "done";
-                const active = i === step && status !== "done";
-                return (
-                  <div key={s} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, zIndex: 1 }}>
-                    <div style={{ width: 22, height: 22, borderRadius: "50%", background: done ? "#00E5FF" : active ? "#0D1117" : "#1C2333", border: active ? "2px solid #00E5FF" : done ? "none" : "2px solid #1C2333", display: "flex", alignItems: "center", justifyContent: "center", transition: "all 0.3s", flexShrink: 0 }}>
-                      {done && <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M2 5.5l2.5 2.5 4.5-4.5" stroke="#060810" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-                      {active && <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#00E5FF", animation: "mmPulse 1s ease-in-out infinite" }} />}
-                    </div>
-                    <div style={{ fontSize: 9, fontFamily: "monospace", color: done ? "#00E5FF" : active ? "#A0B0C8" : "#3D4F6B", textTransform: "uppercase", letterSpacing: 0.5, whiteSpace: "nowrap" }}>
-                      {["Pending","Bridging","Swapping","Done"][i]}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-            {meta && (
-              <div style={{ marginTop: 14, padding: "10px 14px", background: "rgba(6,8,16,0.6)", border: `1px solid ${meta.color}22`, borderRadius: 10, display: "flex", alignItems: "center", gap: 10 }}>
-                {status !== "done" && <div style={{ width: 13, height: 13, border: `2px solid ${meta.color}44`, borderTopColor: meta.color, borderRadius: "50%", animation: "mmSpin 0.8s linear infinite", flexShrink: 0 }} />}
-                {status === "done" && <span style={{ color: "#00E5FF", fontSize: 13 }}>✓</span>}
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: meta.color }}>{meta.label}</div>
-                  <div style={{ fontSize: 11, color: "#3D4F6B", fontFamily: "monospace", marginTop: 1 }}>{meta.detail}</div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-        {status === "idle" && <button onClick={simulate} style={{ width: "100%", padding: 15, borderRadius: 14, background: "#00E5FF", color: "#060810", border: "none", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Confirm Swap · Simulated</button>}
-        {status === "done" && <button onClick={onClose} style={{ width: "100%", padding: 15, borderRadius: 14, background: "transparent", color: "#00E5FF", border: "1px solid rgba(0,229,255,0.3)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Done</button>}
-        {status !== "idle" && status !== "done" && <button disabled style={{ width: "100%", padding: 15, borderRadius: 14, background: "#0D1520", color: "#2D3F52", border: "none", fontWeight: 700, fontSize: 14, cursor: "not-allowed" }}>Processing...</button>}
       </div>
     </div>
   );
@@ -326,7 +224,7 @@ function PriceImpactWarning({ route, amount, toToken }: { route: RouteResult; am
   const isHigh = priceImpact > 15;
   return (
     <div style={{ fontSize: 11, fontFamily: "monospace", color: isHigh ? "#FC8181" : "#F3BA2F", padding: "8px 12px", background: isHigh ? "rgba(252,129,129,0.06)" : "rgba(243,186,47,0.06)", borderRadius: 8, border: `1px solid ${isHigh ? "rgba(252,129,129,0.2)" : "rgba(243,186,47,0.2)"}`, marginTop: 8 }}>
-      {isHigh ? "🔴" : "⚠"} Price impact: ~{priceImpact.toFixed(1)}% — {isHigh ? "HIGH RISK. You may lose significant value." : "Consider splitting the trade."}
+      {isHigh ? "🔴" : "⚠"} Price impact: ~{priceImpact.toFixed(1)}% — {isHigh ? "HIGH RISK." : "Consider splitting."}
     </div>
   );
 }
@@ -343,7 +241,6 @@ export function SwapInterface() {
   const [error, setError]         = useState("");
   const [selectedRoute, setSelectedRoute] = useState<RouteResult | null>(null);
   const [routesVisible, setRoutesVisible] = useState(false);
-  const [showTx, setShowTx]       = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [showBanner, setShowBanner] = useState(true);
   const [showHistory, setShowHistory] = useState(false);
@@ -364,16 +261,13 @@ export function SwapInterface() {
   useEffect(() => {
     if (swap.step === "done" && swap.txHash && selectedRoute) {
       const entry: SwapHistoryEntry = {
-        id: swap.txHash,
-        timestamp: Date.now(),
+        id: swap.txHash, timestamp: Date.now(),
         fromChain: CHAIN_NAMES[fromChain.id] ?? fromChain.name,
         toChain: CHAIN_NAMES[toChain.id] ?? toChain.name,
-        fromToken: fromToken.symbol,
-        toToken: toToken.symbol,
+        fromToken: fromToken.symbol, toToken: toToken.symbol,
         fromAmount: parseFloat(amount).toFixed(4),
         toAmount: parseFloat(ethers.formatUnits(selectedRoute.toAmount, toToken.decimals)).toFixed(4),
-        txHash: swap.txHash,
-        explorerLink: swap.explorerLink ?? undefined,
+        txHash: swap.txHash, explorerLink: swap.explorerLink ?? undefined,
       };
       saveHistory([entry, ...loadHistory()]);
     }
@@ -404,23 +298,102 @@ export function SwapInterface() {
   const fmt = (raw: string, dec: number) => { try { return parseFloat(ethers.formatUnits(raw, dec)).toFixed(6); } catch { return "—"; } };
   const fmtTime = (s: number) => s < 60 ? `~${s}s` : `~${Math.ceil(s / 60)}m`;
 
-  const S = {
-    page: { minHeight: "100vh", background: "#060810", display: "flex", flexDirection: "column" as const, alignItems: "center", justifyContent: "center", padding: "24px 12px", position: "relative" as const, overflow: "hidden", fontFamily: "'DM Sans', sans-serif" },
-    card: { width: "100%", maxWidth: 468, position: "relative" as const, zIndex: 1 },
-    swapCard: { background: "rgba(13,17,23,0.95)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 20, padding: "14px 12px", backdropFilter: "blur(20px)", boxShadow: "0 0 0 1px rgba(0,229,255,0.04), 0 24px 64px rgba(0,0,0,0.5)" },
-    box: { background: "rgba(6,8,16,0.8)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, padding: "12px 14px" },
-    boxLabel: { fontSize: 11, color: "#3D4F6B", fontFamily: "monospace", letterSpacing: "1.5px", textTransform: "uppercase" as const, marginBottom: 10, display: "flex", justifyContent: "space-between", alignItems: "center" },
-    row: { display: "flex", alignItems: "center", gap: 8 },
-    input: { flex: 1, background: "transparent", border: "none", outline: "none", fontSize: 24, fontWeight: 700, color: "#F0F4FF", fontFamily: "'DM Sans', sans-serif", minWidth: 0, maxWidth: "100%" },
-  };
-
   return (
     <>
-      <style>{`@keyframes mmSpin{to{transform:rotate(360deg)}}@keyframes mmPulse{0%,100%{opacity:1}50%{opacity:0.4}}@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}`}</style>
+      <style dangerouslySetInnerHTML={{__html: `
+        @keyframes mmSpin{to{transform:rotate(360deg)}}
+        @keyframes mmPulse{0%,100%{opacity:1}50%{opacity:0.4}}
+        @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+        * { box-sizing: border-box; }
+        .mm-page {
+          min-height: 100vh;
+          background: #060810;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 70px 12px 24px;
+          position: relative;
+          overflow: hidden;
+          font-family: 'DM Sans', sans-serif;
+        }
+        .mm-card {
+          width: 100%;
+          max-width: 468px;
+          position: relative;
+          z-index: 1;
+        }
+        .mm-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 20px;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+        .mm-header-right {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          flex-wrap: wrap;
+        }
+        .mm-swap-card {
+          background: rgba(13,17,23,0.95);
+          border: 1px solid rgba(255,255,255,0.06);
+          border-radius: 20px;
+          padding: 14px 12px;
+          backdrop-filter: blur(20px);
+          box-shadow: 0 0 0 1px rgba(0,229,255,0.04), 0 24px 64px rgba(0,0,0,0.5);
+        }
+        .mm-box {
+          background: rgba(6,8,16,0.8);
+          border: 1px solid rgba(255,255,255,0.05);
+          border-radius: 14px;
+          padding: 12px 14px;
+        }
+        .mm-box-label {
+          font-size: 11px;
+          color: #3D4F6B;
+          font-family: monospace;
+          letter-spacing: 1.5px;
+          text-transform: uppercase;
+          margin-bottom: 10px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .mm-input-row {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          min-width: 0;
+        }
+        .mm-amount-input {
+          flex: 1;
+          background: transparent;
+          border: none;
+          outline: none;
+          font-size: 24px;
+          font-weight: 700;
+          color: #F0F4FF;
+          font-family: 'DM Sans', sans-serif;
+          min-width: 0;
+          width: 100%;
+        }
+        @media (max-width: 400px) {
+          .mm-amount-input { font-size: 20px; }
+          .mm-header-btn-text { display: none; }
+          .mm-logo-sub { display: none; }
+        }
+        @media (max-width: 360px) {
+          .mm-amount-input { font-size: 18px; }
+        }
+      `}} />
 
+      {/* Execution modals */}
       {swap.step !== "idle" && swap.step !== "done" && swap.step !== "failed" && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 24 }}>
-          <div style={{ width: "100%", maxWidth: 420, background: "#0D1117", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 24, boxShadow: "0 32px 80px rgba(0,0,0,0.7)" }}>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 16 }}>
+          <div style={{ width: "100%", maxWidth: 420, background: "#0D1117", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 20, padding: 24 }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: "#F0F4FF", marginBottom: 16 }}>Executing Swap</div>
             <div style={{ fontSize: 13, color: "#A0B0C8", fontFamily: "monospace" }}>
               {swap.step === "approving" && "Approve token in wallet..."}
@@ -435,7 +408,7 @@ export function SwapInterface() {
       )}
 
       {swap.step === "done" && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 24 }}>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 16 }}>
           <div style={{ width: "100%", maxWidth: 420, background: "#0D1117", border: "1px solid rgba(0,229,255,0.3)", borderRadius: 20, padding: 24 }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: "#00E5FF", marginBottom: 8 }}>Swap Complete ✓</div>
             {swap.explorerLink && <a href={swap.explorerLink} target="_blank" rel="noopener noreferrer" style={{ fontSize: 12, color: "#00E5FF", fontFamily: "monospace" }}>View on LI.FI Explorer</a>}
@@ -446,7 +419,7 @@ export function SwapInterface() {
       )}
 
       {swap.step === "failed" && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 24 }}>
+        <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 16 }}>
           <div style={{ width: "100%", maxWidth: 420, background: "#0D1117", border: "1px solid rgba(252,129,129,0.3)", borderRadius: 20, padding: 24 }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: "#FC8181", marginBottom: 8 }}>Swap Failed</div>
             {swap.error && <div style={{ fontSize: 12, fontFamily: "monospace", color: "#A0B0C8", marginBottom: 16, lineHeight: 1.5 }}>{swap.error}</div>}
@@ -456,33 +429,37 @@ export function SwapInterface() {
       )}
 
       {showHistory && <HistoryPanel onClose={() => setShowHistory(false)} />}
-      {showTx && selectedRoute && <TxModal route={selectedRoute} fromToken={fromToken} toToken={toToken} amount={amount} onClose={() => setShowTx(false)} />}
 
-      <div style={S.page}>
+      <div className="mm-page">
         {showBanner && (
-          <div style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 300, background: "rgba(243,186,47,0.08)", borderBottom: "1px solid rgba(243,186,47,0.15)", padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span style={{ fontSize: 12, fontFamily: "monospace", color: "#F3BA2F" }}>⚠ MultiMesh is in beta. Use small amounts and proceed with caution.</span>
-            <button onClick={() => setShowBanner(false)} style={{ background: "none", border: "none", color: "#3D4F6B", cursor: "pointer", fontSize: 16, padding: 0, marginLeft: 12 }}>×</button>
+          <div style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 300, background: "rgba(243,186,47,0.08)", borderBottom: "1px solid rgba(243,186,47,0.15)", padding: "8px 16px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ fontSize: 11, fontFamily: "monospace", color: "#F3BA2F", lineHeight: 1.4 }}>⚠ MultiMesh is in beta. Use small amounts.</span>
+            <button onClick={() => setShowBanner(false)} style={{ background: "none", border: "none", color: "#3D4F6B", cursor: "pointer", fontSize: 16, padding: 0, marginLeft: 8, flexShrink: 0 }}>×</button>
           </div>
         )}
+
         <div style={{ position: "fixed", top: -200, left: -200, width: 600, height: 600, background: "radial-gradient(circle,rgba(0,229,255,0.04) 0%,transparent 70%)", pointerEvents: "none" }} />
         <div style={{ position: "fixed", bottom: -200, right: -200, width: 500, height: 500, background: "radial-gradient(circle,rgba(123,97,255,0.04) 0%,transparent 70%)", pointerEvents: "none" }} />
         <div style={{ position: "fixed", inset: 0, backgroundImage: "linear-gradient(rgba(0,229,255,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,0.025) 1px,transparent 1px)", backgroundSize: "48px 48px", pointerEvents: "none" }} />
 
-        <div style={S.card}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24 }}>
+        <div className="mm-card">
+          <div className="mm-header">
             <div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: "#F0F4FF", letterSpacing: -0.5 }}>MULTI<span style={{ color: "#00E5FF" }}>MESH</span></div>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
-                <div style={{ fontSize: 11, color: "#3D4F6B", fontFamily: "monospace", letterSpacing: 1 }}>Cross-Chain Swap Aggregator</div>
-                <span style={{ fontSize: 9, fontFamily: "monospace", color: "#F3BA2F", background: "rgba(243,186,47,0.1)", padding: "1px 6px", borderRadius: 4, letterSpacing: 1 }}>BETA</span>
+              <div style={{ fontSize: 18, fontWeight: 700, color: "#F0F4FF", letterSpacing: -0.5 }}>MULTI<span style={{ color: "#00E5FF" }}>MESH</span></div>
+              <div className="mm-logo-sub" style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 2 }}>
+                <div style={{ fontSize: 10, color: "#3D4F6B", fontFamily: "monospace", letterSpacing: 1 }}>Cross-Chain Aggregator</div>
+                <span style={{ fontSize: 9, fontFamily: "monospace", color: "#F3BA2F", background: "rgba(243,186,47,0.1)", padding: "1px 5px", borderRadius: 4, letterSpacing: 1 }}>BETA</span>
               </div>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <button onClick={() => setShowHistory(true)} style={{ padding: "6px 12px", borderRadius: 9, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", color: "#3D4F6B", fontSize: 11, fontFamily: "monospace", cursor: "pointer", letterSpacing: 1 }}>HISTORY</button>
-              <a href="/points" style={{ padding: "6px 12px", borderRadius: 9, background: "rgba(0,229,255,0.06)", border: "1px solid rgba(0,229,255,0.15)", color: "#00E5FF", fontSize: 11, fontFamily: "monospace", cursor: "pointer", letterSpacing: 1, textDecoration: "none" }}>POINTS ✦</a>
+            <div className="mm-header-right">
+              <button onClick={() => setShowHistory(true)} style={{ padding: "5px 10px", borderRadius: 8, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", color: "#3D4F6B", fontSize: 10, fontFamily: "monospace", cursor: "pointer", letterSpacing: 1 }}>
+                HISTORY
+              </button>
+              <a href="/points" style={{ padding: "5px 10px", borderRadius: 8, background: "rgba(0,229,255,0.06)", border: "1px solid rgba(0,229,255,0.15)", color: "#00E5FF", fontSize: 10, fontFamily: "monospace", cursor: "pointer", letterSpacing: 1, textDecoration: "none" }}>
+                POINTS ✦
+              </a>
               <div ref={settingsRef} style={{ position: "relative" }}>
-                <button onClick={() => setShowSlippage(s => !s)} style={{ padding: "6px 10px", borderRadius: 9, background: showSlippage ? "rgba(0,229,255,0.08)" : "rgba(255,255,255,0.03)", border: showSlippage ? "1px solid rgba(0,229,255,0.2)" : "1px solid rgba(255,255,255,0.07)", color: slippage !== 5 ? "#00E5FF" : "#3D4F6B", fontSize: 11, fontFamily: "monospace", cursor: "pointer", letterSpacing: 1 }}>
+                <button onClick={() => setShowSlippage(s => !s)} style={{ padding: "5px 8px", borderRadius: 8, background: showSlippage ? "rgba(0,229,255,0.08)" : "rgba(255,255,255,0.03)", border: showSlippage ? "1px solid rgba(0,229,255,0.2)" : "1px solid rgba(255,255,255,0.07)", color: slippage !== 5 ? "#00E5FF" : "#3D4F6B", fontSize: 10, fontFamily: "monospace", cursor: "pointer" }}>
                   ⚙ {slippage}%
                 </button>
                 {showSlippage && <SlippagePanel slippage={slippage} onChange={v => { setSlippage(v); reset(); }} onClose={() => setShowSlippage(false)} />}
@@ -491,19 +468,19 @@ export function SwapInterface() {
             </div>
           </div>
 
-          <div style={S.swapCard}>
-            <div style={S.box}>
-              <div style={S.boxLabel}>
+          <div className="mm-swap-card">
+            <div className="mm-box">
+              <div className="mm-box-label">
                 <span>From</span>
                 <ChainDropdown value={fromChain} onChange={c => { setFromChain(c); setFromToken(SUPPORTED_TOKENS[c.id][0]); reset(); }} />
               </div>
-              <div style={S.row}>
-                <input style={S.input} type="number" placeholder="0.00" value={amount} onChange={e => { setAmount(e.target.value); reset(); }} />
+              <div className="mm-input-row">
+                <input className="mm-amount-input" type="number" placeholder="0.00" value={amount} onChange={e => { setAmount(e.target.value); reset(); }} />
                 <TokenDropdown value={fromToken} tokens={fromTokens} onChange={t => { setFromToken(t); setFromTokenUnverified(!SUPPORTED_TOKENS[fromChain.id]?.find(x => x.address === t.address)); reset(); }} chainId={fromChain.id} />
               </div>
               {address && balanceData && (
                 <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 6 }}>
-                  <span style={{ fontSize: 11, fontFamily: "monospace", color: "#3D4F6B" }}>Balance:</span>
+                  <span style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B" }}>Balance:</span>
                   <button onClick={() => setAmount(parseFloat(balanceData.formatted).toFixed(6))} style={{ fontSize: 11, fontFamily: "monospace", color: "#00E5FF", background: "none", border: "none", cursor: "pointer", padding: 0 }}>
                     {parseFloat(balanceData.formatted).toFixed(4)} {balanceData.symbol}
                   </button>
@@ -512,35 +489,34 @@ export function SwapInterface() {
             </div>
 
             <div style={{ display: "flex", justifyContent: "center", margin: "4px 0" }}>
-              <button onClick={switchChains} style={{ width: 34, height: 34, borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", color: "#3D4F6B", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 15 }}>⇅</button>
+              <button onClick={switchChains} style={{ width: 32, height: 32, borderRadius: 10, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", color: "#3D4F6B", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14 }}>⇅</button>
             </div>
 
-            <div style={S.box}>
-              <div style={S.boxLabel}>
+            <div className="mm-box">
+              <div className="mm-box-label">
                 <span>To</span>
                 <ChainDropdown value={toChain} onChange={c => { setToChain(c); setToToken(SUPPORTED_TOKENS[c.id][0]); reset(); }} />
               </div>
-              <div style={S.row}>
-                <div style={{ flex: 1, fontSize: 28, fontWeight: 700, color: selectedRoute ? "#00E5FF" : "#1C2A3A" }}>
+              <div className="mm-input-row">
+                <div style={{ flex: 1, fontSize: 26, fontWeight: 700, color: selectedRoute ? "#00E5FF" : "#1C2A3A", minWidth: 0 }}>
                   {selectedRoute ? fmt(selectedRoute.toAmount, toToken.decimals) : "0.00"}
                 </div>
                 <TokenDropdown value={toToken} tokens={toTokens} onChange={t => { setToToken(t); setToTokenUnverified(!SUPPORTED_TOKENS[toChain.id]?.find(x => x.address === t.address)); reset(); }} chainId={toChain.id} />
               </div>
               {selectedRoute && (
                 <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.04)" }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <div style={{ display: "flex", gap: 12 }}>
-                      <div><div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1 }}>FEE</div><div style={{ fontSize: 12, fontFamily: "monospace", color: "#A0B0C8", marginTop: 2 }}>${parseFloat(selectedRoute.gasCostUSD || "0").toFixed(2)}</div></div>
-                      <div><div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1 }}>TIME</div><div style={{ fontSize: 12, fontFamily: "monospace", color: "#A0B0C8", marginTop: 2 }}>{fmtTime(selectedRoute.executionDuration)}</div></div>
-                      <div><div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1 }}>RISK</div><div style={{ fontSize: 12, fontFamily: "monospace", color: getRiskLabel(selectedRoute.tags).color, marginTop: 2 }}>{getRiskLabel(selectedRoute.tags).label}</div></div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+                    <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                      <div><div style={{ fontSize: 9, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1 }}>FEE</div><div style={{ fontSize: 11, fontFamily: "monospace", color: "#A0B0C8", marginTop: 2 }}>${parseFloat(selectedRoute.gasCostUSD || "0").toFixed(2)}</div></div>
+                      <div><div style={{ fontSize: 9, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1 }}>TIME</div><div style={{ fontSize: 11, fontFamily: "monospace", color: "#A0B0C8", marginTop: 2 }}>{fmtTime(selectedRoute.executionDuration)}</div></div>
+                      <div><div style={{ fontSize: 9, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1 }}>RISK</div><div style={{ fontSize: 11, fontFamily: "monospace", color: getRiskLabel(selectedRoute.tags).color, marginTop: 2 }}>{getRiskLabel(selectedRoute.tags).label}</div></div>
                     </div>
-                    <button onClick={() => setShowDetails(d => !d)} style={{ fontSize: 11, fontFamily: "monospace", color: "#3D4F6B", background: "none", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 6, padding: "3px 8px", cursor: "pointer" }}>
+                    <button onClick={() => setShowDetails(d => !d)} style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", background: "none", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 6, padding: "3px 8px", cursor: "pointer" }}>
                       {showDetails ? "Hide ▲" : "Details ▾"}
                     </button>
                   </div>
                   {showDetails && (
                     <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.04)" }}>
-                      <div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1, marginBottom: 6 }}>ROUTE</div>
                       {selectedRoute.steps?.length > 0 && (
                         <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: 8 }}>
                           {selectedRoute.steps.map((s, si) => (
@@ -548,14 +524,14 @@ export function SwapInterface() {
                           ))}
                         </div>
                       )}
-                      <div><div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1 }}>VALUE OUT</div><div style={{ fontSize: 12, fontFamily: "monospace", color: "#A0B0C8", marginTop: 2 }}>~${parseFloat(selectedRoute.toAmountUSD || "0").toFixed(2)}</div></div>
+                      <div><div style={{ fontSize: 9, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: 1 }}>VALUE OUT</div><div style={{ fontSize: 11, fontFamily: "monospace", color: "#A0B0C8", marginTop: 2 }}>~${parseFloat(selectedRoute.toAmountUSD || "0").toFixed(2)}</div></div>
                     </div>
                   )}
                 </div>
               )}
             </div>
 
-            <button onClick={findRoutes} disabled={loading || !amount} style={{ width: "100%", padding: 15, borderRadius: 14, background: loading || !amount ? "#0D1520" : "#00E5FF", color: loading || !amount ? "#2D3F52" : "#060810", border: "none", fontWeight: 700, fontSize: 14, cursor: loading || !amount ? "not-allowed" : "pointer", marginTop: 8 }}>
+            <button onClick={findRoutes} disabled={loading || !amount} style={{ width: "100%", padding: 14, borderRadius: 14, background: loading || !amount ? "#0D1520" : "#00E5FF", color: loading || !amount ? "#2D3F52" : "#060810", border: "none", fontWeight: 700, fontSize: 14, cursor: loading || !amount ? "not-allowed" : "pointer", marginTop: 8 }}>
               {loading ? (
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
                   <div style={{ width: 16, height: 16, border: "2px solid rgba(6,8,16,0.3)", borderTopColor: "#060810", borderRadius: "50%", animation: "mmSpin 0.7s linear infinite" }} />
@@ -566,7 +542,7 @@ export function SwapInterface() {
 
             {(fromTokenUnverified || toTokenUnverified) && (
               <div style={{ fontSize: 11, fontFamily: "monospace", color: "#F3BA2F", padding: "8px 12px", background: "rgba(243,186,47,0.06)", borderRadius: 8, border: "1px solid rgba(243,186,47,0.15)", marginTop: 8 }}>
-                ⚠ Unverified token — always check the contract address before swapping.
+                ⚠ Unverified token — check contract before swapping.
               </div>
             )}
 
@@ -577,7 +553,7 @@ export function SwapInterface() {
 
           {loading && (
             <div style={{ marginTop: 12 }}>
-              <div style={{ fontSize: 11, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 8 }}>Scanning...</div>
+              <div style={{ fontSize: 10, fontFamily: "monospace", color: "#3D4F6B", letterSpacing: "1.5px", textTransform: "uppercase", marginBottom: 8 }}>Scanning...</div>
               {[0,1,2].map(i => <SkeletonRoute key={i} />)}
             </div>
           )}
@@ -590,7 +566,7 @@ export function SwapInterface() {
             </div>
           )}
 
-          <div style={{ fontSize: 11, fontFamily: "monospace", color: "#1C2A3A", textAlign: "center", marginTop: 20 }}>Powered by LI.FI &nbsp;·&nbsp; ETH &nbsp;·&nbsp; MATIC &nbsp;·&nbsp; BNB &nbsp;·&nbsp; ARB &nbsp;·&nbsp; OP &nbsp;·&nbsp; BASE</div>
+          <div style={{ fontSize: 10, fontFamily: "monospace", color: "#1C2A3A", textAlign: "center", marginTop: 16 }}>Powered by LI.FI · ETH · MATIC · BNB · ARB · OP · BASE</div>
         </div>
       </div>
     </>
