@@ -129,7 +129,7 @@ export function RefuelBanner({ toChainId, toChainName, onDismiss }: RefuelBanner
       )}
 
       {step === "done" && (
-        <div style={{ marginTop: 10, fontSize: 12, fontFamily: "monospace", color: "#00E5FF" }}>
+        <div style={{ marginTop: 10, fontSize: 12, fontFamily: "monospace", color: "#6B7FA3" }}>
           ✓ Gas added to {toChainName}
         </div>
       )}
