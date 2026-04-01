@@ -141,6 +141,7 @@ export default function Home() {
             <a href="#why" className="nav-link">Why MultiMesh</a>
             <a href="/points" className="nav-link">Points</a>
             <a href="/docs" className="nav-link">Docs</a>
+            <a href="/limit-orders" className="nav-link">Limit Orders</a>
           </div>
         </div>
         <div style={{ display:"flex", alignItems:"center", gap:10 }}>
@@ -310,7 +311,9 @@ export default function Home() {
           <a href="/privacy" style={{ color:"#2D3A50", textDecoration:"none" }}>Privacy</a>
           <a href="/terms" style={{ color:"#2D3A50", textDecoration:"none" }}>Terms</a>
           <a href="/points" style={{ color:"#818CF8", textDecoration:"none" }}>Points ✦</a>
+          
           <a href="/refuel" style={{ color:"#2D3A50", textDecoration:"none" }}>Refuel</a>
+          <a href="/limit-orders" style={{ color:"#818CF8", textDecoration:"none" }}>Limit Orders ↗</a>
           <a href="https://t.me/multi_mesh" target="_blank" rel="noopener noreferrer" style={{ color:"#2D3A50", textDecoration:"none" }}>Telegram</a>
           <span style={{ color:"#2D3A50" }}>Powered by LI.FI</span>
         </div>
