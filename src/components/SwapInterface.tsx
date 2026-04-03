@@ -140,31 +140,31 @@ function TokenDropdown({ value, tokens, onChange, chainId }: { value: Token; tok
         <span style={{ fontSize: 8, color: "#4B5A72" }}>▾</span>
       </button>
       {open && (
-  <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, background: "#0A0C16", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: 6, zIndex: 100, minWidth: 200, boxShadow: "0 16px 40px rgba(0,0,0,0.6)", maxHeight: "70vh", overflowY: "auto" }}>
-    <div style={{ padding: "8px 6px", borderBottom: "1px solid rgba(255,255,255,0.06)", marginBottom: 4 }}>
-      <div style={{ fontSize: 10, fontFamily: "monospace", color: "#4B5A72", letterSpacing: 1, marginBottom: 6 }}>PASTE CONTRACT ADDRESS</div>
-      <div style={{ display: "flex", gap: 6 }}>
-        <input value={customAddress} onChange={e => { setCustomAddress(e.target.value); setCustomError(""); }} onKeyDown={e => e.key === "Enter" && handleCustomToken()} placeholder="0x..."
-          style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "6px 8px", fontSize: 11, fontFamily: "monospace", color: "#EEF2FF", outline: "none", minWidth: 0 }} />
-        <button onClick={handleCustomToken} disabled={customLoading} style={{ padding: "6px 10px", borderRadius: 8, background: customLoading ? "#1A1F2E" : "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.25)", color: "#818CF8", fontSize: 11, cursor: customLoading ? "not-allowed" : "pointer", whiteSpace: "nowrap" }}>
-          {customLoading ? "..." : "Add"}
-        </button>
-      </div>
-      {customError && <div style={{ fontSize: 10, fontFamily: "monospace", color: "#F87171", marginTop: 4 }}>{customError}</div>}
-    </div>
-    {tokens.map(t => (
-      <button key={t.address} onClick={() => { onChange(t); setOpen(false); setCustomAddress(""); setCustomError(""); }}
-        style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "8px 10px", background: t.address === value.address ? "rgba(99,102,241,0.08)" : "transparent", border: "none", borderRadius: 8, cursor: "pointer" }}>
-        <Img src={TOKEN_LOGOS[t.symbol] ?? ""} size={22} />
-        <div style={{ textAlign: "left" }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: t.address === value.address ? "#818CF8" : "#EEF2FF" }}>{t.symbol}</div>
-          <div style={{ fontSize: 10, color: "#4B5A72" }}>{t.name}</div>
+        <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, background: "#0A0C16", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: 6, zIndex: 100, minWidth: 200, boxShadow: "0 16px 40px rgba(0,0,0,0.6)", maxHeight: "70vh", overflowY: "auto" }}>
+          <div style={{ padding: "8px 6px", borderBottom: "1px solid rgba(255,255,255,0.06)", marginBottom: 4 }}>
+            <div style={{ fontSize: 10, fontFamily: "monospace", color: "#4B5A72", letterSpacing: 1, marginBottom: 6 }}>PASTE CONTRACT ADDRESS</div>
+            <div style={{ display: "flex", gap: 6 }}>
+              <input value={customAddress} onChange={e => { setCustomAddress(e.target.value); setCustomError(""); }} onKeyDown={e => e.key === "Enter" && handleCustomToken()} placeholder="0x..."
+                style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "6px 8px", fontSize: 11, fontFamily: "monospace", color: "#EEF2FF", outline: "none", minWidth: 0 }} />
+              <button onClick={handleCustomToken} disabled={customLoading} style={{ padding: "6px 10px", borderRadius: 8, background: customLoading ? "#1A1F2E" : "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.25)", color: "#818CF8", fontSize: 11, cursor: customLoading ? "not-allowed" : "pointer", whiteSpace: "nowrap" }}>
+                {customLoading ? "..." : "Add"}
+              </button>
+            </div>
+            {customError && <div style={{ fontSize: 10, fontFamily: "monospace", color: "#F87171", marginTop: 4 }}>{customError}</div>}
+          </div>
+          {tokens.map(t => (
+            <button key={t.address} onClick={() => { onChange(t); setOpen(false); setCustomAddress(""); setCustomError(""); }}
+              style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "8px 10px", background: t.address === value.address ? "rgba(99,102,241,0.08)" : "transparent", border: "none", borderRadius: 8, cursor: "pointer" }}>
+              <Img src={TOKEN_LOGOS[t.symbol] ?? ""} size={22} />
+              <div style={{ textAlign: "left" }}>
+                <div style={{ fontSize: 13, fontWeight: 700, color: t.address === value.address ? "#818CF8" : "#EEF2FF" }}>{t.symbol}</div>
+                <div style={{ fontSize: 10, color: "#4B5A72" }}>{t.name}</div>
+              </div>
+            </button>
+          ))}
         </div>
-      </button>
-    ))}
-  </div>
-)}
-</div>
+      )}
+    </div>
   );
 }
 
