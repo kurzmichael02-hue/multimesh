@@ -34,6 +34,9 @@ export default function Home() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+const ref = params.get("ref");
+if (ref) localStorage.setItem("mm_referral_code", ref.toUpperCase());
     const consent = localStorage.getItem("mm_cookie_consent");
     if (!consent) setCookieAccepted(false);
     const onScroll = () => setScrolled(window.scrollY > 40);
