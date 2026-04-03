@@ -291,7 +291,14 @@ export function SwapInterface() {
       if (result.length === 0) setError("No routes found. Try a different amount or pair.");
       else { setRoutes(result); setSelectedRoute(result[0]); setTimeout(() => setRoutesVisible(true), 50); }
     } catch (e: any) {
-      setError(e?.message ?? "Could not fetch routes. Check your connection.");
+      const msg = e?.message ?? "";
+setError(
+  msg.includes("allowance") || msg.includes("returned no data") ? "This token doesn't support standard swapping on this chain." :
+  msg.includes("No route") || msg.includes("no route") ? "No route found for this pair. Try a different amount or token." :
+  msg.includes("rejected") || msg.includes("denied") ? "Transaction cancelled." :
+  msg.includes("insufficient") ? "Insufficient balance or gas." :
+  msg || "Could not fetch routes. Check your connection."
+);
     } finally { setLoading(false); }
   };
 
@@ -368,7 +375,13 @@ export function SwapInterface() {
         <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.75)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 200, padding: 16 }}>
           <div style={{ width: "100%", maxWidth: 420, background: "#0A0C16", border: "1px solid rgba(239,68,68,0.3)", borderRadius: 20, padding: 24 }}>
             <div style={{ fontSize: 15, fontWeight: 700, color: "#F87171", marginBottom: 8 }}>Swap Failed</div>
-            {swap.error && <div style={{ fontSize: 12, fontFamily: "monospace", color: "#A0B0C8", marginBottom: 16, lineHeight: 1.5 }}>{swap.error}</div>}
+            {swap.error && (
+  <div style={{ fontSize: 12, fontFamily: "monospace", color: "#A0B0C8", marginBottom: 16, lineHeight: 1.5 }}>
+    {swap.error.includes("allowance") || swap.error.includes("returned no data")
+      ? "This token doesn't support standard swapping on this chain. Try a different token or check that the contract address is correct."
+      : swap.error}
+  </div>
+)}
             <button onClick={swap.reset} style={{ width: "100%", padding: 14, borderRadius: 12, background: "transparent", color: "#F87171", border: "1px solid rgba(239,68,68,0.3)", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>Try Again</button>
           </div>
         </div>
