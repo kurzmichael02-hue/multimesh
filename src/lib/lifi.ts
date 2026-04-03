@@ -79,7 +79,7 @@ const CONFIG = {
   API_TIMEOUT_MS: 8000,
   MAX_RETRIES: 2, 
   RETRY_DELAY_MS: 1000,
-  FEE_WALLET: "0x4070665b35b032A27413dd19BEB5C81b687e28A8",
+  FEE_WALLET: process.env.NEXT_PUBLIC_LIFI_FEE_WALLET || "0xf60EA8a04555D87c9b252096cE98197f87cC080e",
   FEE_PERCENTAGE: 0.0015, // 15 bps
   MIN_GAS_USD: {
     1: 5.0,
@@ -424,7 +424,7 @@ export async function getRoutes(req: RouteRequest): Promise<RouteResult[]> {
 export function getRiskLabel(
   tags: string[]
 ): { label: string; color: string; score: number } {
-  if (tags.includes("RECOMMENDED")) return { label: "Low Risk", color: "#818CF8", score: 1 };
+  if (tags.includes("RECOMMENDED")) return { label: "Low Risk", color: "#00E5FF", score: 1 };
   if (tags.includes("CHEAPEST")) return { label: "Budget Route", color: "#FFA500", score: 2 };
   if (tags.includes("FASTEST")) return { label: "Fast Route", color: "#90EE90", score: 2 };
   return { label: "Standard", color: "#4A5568", score: 3 };
