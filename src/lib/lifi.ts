@@ -98,6 +98,8 @@ const CONFIG = {
     8453: "ETH",
   } as Record<number, string>,
 } as const;
+export const MIN_GAS_USD = CONFIG.MIN_GAS_USD;
+export const CHAIN_GAS_SYMBOL = CONFIG.CHAIN_GAS_SYMBOL;
 
 // ============================================================================
 // ERROR HANDLING
