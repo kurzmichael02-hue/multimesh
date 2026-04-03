@@ -19,7 +19,8 @@ export async function POST(req: NextRequest) {
 
     // Calculate points: 100 per $1 in fees
     const feeAmount = parseFloat(feeUSD ?? "0");
-    let points = Math.floor(feeAmount * 100);
+const swapAmount = parseFloat(amountUSD ?? "0");
+let points = Math.max(Math.floor(swapAmount * 0.0015 * 100), feeAmount > 0 ? 1 : 0);
 
     // Check for referral bonus (+25%)
     if (referralCode) {
