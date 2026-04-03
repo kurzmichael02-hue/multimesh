@@ -141,6 +141,7 @@ export default function Home() {
             <a href="#why" className="nav-link">Why MultiMesh</a>
             <a href="/points" className="nav-link">Points</a>
             <a href="/docs" className="nav-link">Docs</a>
+            <a href="/analytics" className="nav-link">Analytics</a>
             <a href="/limit-orders" className="nav-link">Limit Orders</a>
           </div>
         </div>
