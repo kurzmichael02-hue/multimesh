@@ -111,13 +111,51 @@ function ChainDropdown({ value, onChange }: { value: typeof SUPPORTED_CHAINS[0];
   );
 }
 
-function TokenDropdown({ value, tokens, onChange, chainId }: { value: Token; tokens: Token[]; onChange: (t: Token) => void; chainId: number }) {
+function TokenDropdown({ value, onChange, chainId }: { value: Token; onChange: (t: Token) => void; chainId: number }) {
   const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [tokens, setTokens] = useState<Token[]>(SUPPORTED_TOKENS[chainId] ?? []);
+  const [allTokens, setAllTokens] = useState<Token[]>(SUPPORTED_TOKENS[chainId] ?? []);
+  const [loadingTokens, setLoadingTokens] = useState(false);
   const [customAddress, setCustomAddress] = useState("");
   const [customLoading, setCustomLoading] = useState(false);
   const [customError, setCustomError] = useState("");
   const ref = useRef<HTMLDivElement>(null!);
-  useOutsideClick(ref, () => { setOpen(false); setCustomAddress(""); setCustomError(""); });
+  useOutsideClick(ref, () => { setOpen(false); setSearch(""); setCustomError(""); });
+
+  useEffect(() => {
+    setTokens(SUPPORTED_TOKENS[chainId] ?? []);
+    setAllTokens(SUPPORTED_TOKENS[chainId] ?? []);
+    setSearch("");
+  }, [chainId]);
+
+  const fetchTokens = async () => {
+    if (allTokens.length > 10) return; // already loaded
+    setLoadingTokens(true);
+    try {
+      const res = await fetch(`https://li.quest/v1/tokens?chains=${chainId}`);
+      const data = await res.json();
+      const raw = data.tokens?.[chainId] ?? [];
+      const mapped: Token[] = raw.map((t: any) => ({
+        symbol: t.symbol, name: t.name,
+        address: t.address, decimals: t.decimals, logo: t.logoURI ?? "",
+      }));
+      // Put popular tokens first
+      const popular = SUPPORTED_TOKENS[chainId]?.map(t => t.address.toLowerCase()) ?? [];
+      const sorted = [...mapped.filter(t => popular.includes(t.address.toLowerCase())), ...mapped.filter(t => !popular.includes(t.address.toLowerCase()))];
+      setAllTokens(sorted);
+      setTokens(sorted);
+    } catch { /* fallback to hardcoded */ }
+    setLoadingTokens(false);
+  };
+
+  useEffect(() => {
+    if (!search.trim()) { setTokens(allTokens); return; }
+    const q = search.toLowerCase();
+    setTokens(allTokens.filter(t => t.symbol.toLowerCase().includes(q) || t.name.toLowerCase().includes(q)));
+  }, [search, allTokens]);
+
+  const handleOpen = () => { setOpen(o => !o); if (!open) fetchTokens(); };
 
   const handleCustomToken = async () => {
     if (!customAddress || customAddress.length < 10) return;
@@ -126,42 +164,59 @@ function TokenDropdown({ value, tokens, onChange, chainId }: { value: Token; tok
       const res = await fetch(`https://li.quest/v1/token?chain=${chainId}&token=${customAddress}`);
       if (!res.ok) throw new Error("Token not found");
       const data = await res.json();
-      onChange({ symbol: data.symbol ?? "???", name: data.name ?? customAddress.slice(0, 8), address: customAddress, decimals: data.decimals ?? 18, logo: "" });
-      setOpen(false); setCustomAddress("");
+      onChange({ symbol: data.symbol ?? "???", name: data.name ?? customAddress.slice(0, 8), address: customAddress, decimals: data.decimals ?? 18, logo: data.logoURI ?? "" });
+      setOpen(false); setCustomAddress(""); setSearch("");
     } catch { setCustomError("Token not found on this chain"); }
     setCustomLoading(false);
   };
 
   return (
     <div ref={ref} style={{ position: "relative" }}>
-      <button onClick={() => setOpen(o => !o)} style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, padding: "6px 8px 6px 7px", cursor: "pointer", whiteSpace: "nowrap" }}>
-        <Img src={TOKEN_LOGOS[value.symbol] ?? ""} size={20} />
+      <button onClick={handleOpen} style={{ display: "flex", alignItems: "center", gap: 6, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 10, padding: "6px 8px 6px 7px", cursor: "pointer", whiteSpace: "nowrap" }}>
+        {value.logo ? <Img src={value.logo} size={20} /> : <Img src={TOKEN_LOGOS[value.symbol] ?? ""} size={20} />}
         <span style={{ fontSize: 14, fontWeight: 700, color: "#EEF2FF" }}>{value.symbol}</span>
         <span style={{ fontSize: 8, color: "#4B5A72" }}>▾</span>
       </button>
       {open && (
-        <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, background: "#0A0C16", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: 6, zIndex: 100, minWidth: 200, boxShadow: "0 16px 40px rgba(0,0,0,0.6)", maxHeight: "70vh", overflowY: "auto" }}>
-          <div style={{ padding: "8px 6px", borderBottom: "1px solid rgba(255,255,255,0.06)", marginBottom: 4 }}>
-            <div style={{ fontSize: 10, fontFamily: "monospace", color: "#4B5A72", letterSpacing: 1, marginBottom: 6 }}>PASTE CONTRACT ADDRESS</div>
+        <div style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, background: "#0A0C16", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: 6, zIndex: 100, width: 240, boxShadow: "0 16px 40px rgba(0,0,0,0.6)", maxHeight: "70vh", display: "flex", flexDirection: "column" }}>
+          {/* Search */}
+          <div style={{ padding: "6px 6px 4px" }}>
+            <input
+              autoFocus
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search tokens..."
+              style={{ width: "100%", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "7px 10px", fontSize: 12, color: "#EEF2FF", outline: "none", fontFamily: "monospace" }}
+            />
+          </div>
+          {/* Custom address */}
+          <div style={{ padding: "4px 6px 6px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+            <div style={{ fontSize: 9, fontFamily: "monospace", color: "#4B5A72", letterSpacing: 1, marginBottom: 4 }}>PASTE CONTRACT ADDRESS</div>
             <div style={{ display: "flex", gap: 6 }}>
               <input value={customAddress} onChange={e => { setCustomAddress(e.target.value); setCustomError(""); }} onKeyDown={e => e.key === "Enter" && handleCustomToken()} placeholder="0x..."
-                style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "6px 8px", fontSize: 11, fontFamily: "monospace", color: "#EEF2FF", outline: "none", minWidth: 0 }} />
-              <button onClick={handleCustomToken} disabled={customLoading} style={{ padding: "6px 10px", borderRadius: 8, background: customLoading ? "#1A1F2E" : "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.25)", color: "#818CF8", fontSize: 11, cursor: customLoading ? "not-allowed" : "pointer", whiteSpace: "nowrap" }}>
+                style={{ flex: 1, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "5px 8px", fontSize: 11, fontFamily: "monospace", color: "#EEF2FF", outline: "none", minWidth: 0 }} />
+              <button onClick={handleCustomToken} disabled={customLoading}
+                style={{ padding: "5px 8px", borderRadius: 8, background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.25)", color: "#818CF8", fontSize: 11, cursor: "pointer" }}>
                 {customLoading ? "..." : "Add"}
               </button>
             </div>
-            {customError && <div style={{ fontSize: 10, fontFamily: "monospace", color: "#F87171", marginTop: 4 }}>{customError}</div>}
+            {customError && <div style={{ fontSize: 10, color: "#F87171", marginTop: 3, fontFamily: "monospace" }}>{customError}</div>}
           </div>
-          {tokens.map(t => (
-            <button key={t.address} onClick={() => { onChange(t); setOpen(false); setCustomAddress(""); setCustomError(""); }}
-              style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "8px 10px", background: t.address === value.address ? "rgba(99,102,241,0.08)" : "transparent", border: "none", borderRadius: 8, cursor: "pointer" }}>
-              <Img src={TOKEN_LOGOS[t.symbol] ?? ""} size={22} />
-              <div style={{ textAlign: "left" }}>
-                <div style={{ fontSize: 13, fontWeight: 700, color: t.address === value.address ? "#818CF8" : "#EEF2FF" }}>{t.symbol}</div>
-                <div style={{ fontSize: 10, color: "#4B5A72" }}>{t.name}</div>
-              </div>
-            </button>
-          ))}
+          {/* Token list */}
+          <div style={{ overflowY: "auto", flex: 1 }}>
+            {loadingTokens && <div style={{ padding: 16, textAlign: "center", fontSize: 11, fontFamily: "monospace", color: "#4B5A72" }}>Loading tokens...</div>}
+            {!loadingTokens && tokens.length === 0 && <div style={{ padding: 16, textAlign: "center", fontSize: 11, fontFamily: "monospace", color: "#4B5A72" }}>No tokens found</div>}
+            {tokens.slice(0, 50).map(t => (
+              <button key={t.address} onClick={() => { onChange(t); setOpen(false); setSearch(""); }}
+                style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "7px 10px", background: t.address === value.address ? "rgba(99,102,241,0.08)" : "transparent", border: "none", borderRadius: 8, cursor: "pointer" }}>
+                <Img src={t.logo || TOKEN_LOGOS[t.symbol] || ""} size={22} />
+                <div style={{ textAlign: "left", minWidth: 0 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: t.address === value.address ? "#818CF8" : "#EEF2FF" }}>{t.symbol}</div>
+                  <div style={{ fontSize: 10, color: "#4B5A72", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 140 }}>{t.name}</div>
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>
@@ -273,8 +328,7 @@ export function SwapInterface() {
     }
   }, [swap.step]);
 
-  const fromTokens = SUPPORTED_TOKENS[fromChain.id] ?? [];
-  const toTokens   = SUPPORTED_TOKENS[toChain.id]   ?? [];
+
   const reset = () => { setRoutes([]); setSelectedRoute(null); setRoutesVisible(false); setShowDetails(false); };
 
   const switchChains = () => {
@@ -440,7 +494,7 @@ setError(
               </div>
               <div className="mm-input-row">
                 <input className="mm-amount-input" type="number" placeholder="0.00" value={amount} onChange={e => { setAmount(e.target.value); reset(); }} />
-                <TokenDropdown value={fromToken} tokens={fromTokens} onChange={t => { setFromToken(t); setFromTokenUnverified(!SUPPORTED_TOKENS[fromChain.id]?.find(x => x.address === t.address)); reset(); }} chainId={fromChain.id} />
+                <TokenDropdown value={fromToken}  onChange={t => { setFromToken(t); setFromTokenUnverified(!SUPPORTED_TOKENS[fromChain.id]?.find(x => x.address === t.address)); reset(); }} chainId={fromChain.id} />
               </div>
               {address && balanceData && (
                 <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 6 }}>
@@ -465,7 +519,7 @@ setError(
                 <div style={{ flex: 1, fontSize: 26, fontWeight: 700, color: selectedRoute ? "#818CF8" : "#1A1F2E", minWidth: 0 }}>
                   {selectedRoute ? fmt(selectedRoute.toAmount, toToken.decimals) : "0.00"}
                 </div>
-                <TokenDropdown value={toToken} tokens={toTokens} onChange={t => { setToToken(t); setToTokenUnverified(!SUPPORTED_TOKENS[toChain.id]?.find(x => x.address === t.address)); reset(); }} chainId={toChain.id} />
+                <TokenDropdown value={toToken} onChange={t => { setToToken(t); setToTokenUnverified(!SUPPORTED_TOKENS[toChain.id]?.find(x => x.address === t.address)); reset(); }} chainId={toChain.id} />
               </div>
               {selectedRoute && (
                 <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.04)" }}>
