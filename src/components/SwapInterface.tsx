@@ -7,7 +7,6 @@ import { getRoutes, getRiskLabel, RouteResult } from "@/lib/lifi";
 import { ethers } from "ethers";
 import { useSwapExecution } from "@/hooks/useSwapExecution";
 import { RefuelBanner } from "@/components/RefuelBanner";
-import { ThemeToggle } from "@/components/ThemeToggle";
 
 const TOKEN_LOGOS: Record<string, string> = {
   ETH:   "https://assets.coingecko.com/coins/images/279/small/ethereum.png",
@@ -417,7 +416,6 @@ setError(
               </div>
             </div>
             <div className="mm-header-right">
-              <ThemeToggle />
               <button onClick={() => setShowHistory(true)} style={{ padding: "5px 10px", borderRadius: 8, background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", color: "#4B5A72", fontSize: 10, fontFamily: "monospace", cursor: "pointer", letterSpacing: 1 }}>
                 HISTORY
               </button>
