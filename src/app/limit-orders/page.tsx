@@ -314,7 +314,15 @@ const isSolanaDestination = dstChain === 999999;
               <div style={{ background: "rgba(4,6,14,0.8)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, padding: "12px 16px", marginBottom: 8 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
                   <span style={{ fontSize: 10, color: "#4B5A72", fontFamily: "monospace", letterSpacing: 1.5 }}>YOU SELL</span>
-                  <ChainSelect excludeSolana value={srcChain} onChange={id => { setSrcChain(id); setSrcToken({ address: SUPPORTED_TOKENS[id][0].address, symbol: SUPPORTED_TOKENS[id][0].symbol }); setQuote(null); }} />
+                  <ChainSelect value={srcChain} onChange={id => {
+  setSrcChain(id);
+  if (id === 999999) {
+    setSrcToken({ address: SOLANA_TOKENS[0].address, symbol: SOLANA_TOKENS[0].symbol });
+  } else {
+    setSrcToken({ address: SUPPORTED_TOKENS[id][0].address, symbol: SUPPORTED_TOKENS[id][0].symbol });
+  }
+  setQuote(null);
+}} />
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                   <input type="number" placeholder="0.00" value={srcAmount} onChange={e => { setSrcAmount(e.target.value); setQuote(null); }}
@@ -418,14 +426,23 @@ const isSolanaDestination = dstChain === 999999;
         )}
 
         {tab === "my-orders" && (
-          <div className="fade-in">
-            {!address ? (
-              <div style={{ background: "rgba(10,12,22,0.9)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: "48px 24px", textAlign: "center" }}>
-                <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Connect your wallet</div>
-                <div style={{ fontSize: 13, color: "#6B7FA3", marginBottom: 20 }}>Connect to see your limit orders.</div>
-                <ConnectButton />
-              </div>
-            ) : ordersLoading ? (
+  <div className="fade-in">
+    {isSolanaSource && !phantom.connected ? (
+      <div style={{ background: "rgba(10,12,22,0.9)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: "48px 24px", textAlign: "center" }}>
+        <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Connect Phantom</div>
+        <div style={{ fontSize: 13, color: "#6B7FA3", marginBottom: 20 }}>Connect your Phantom wallet to see your orders.</div>
+        <button onClick={phantom.connect} disabled={phantom.connecting}
+          style={{ padding: "10px 22px", borderRadius: 10, background: "#9945FF", color: "#fff", fontWeight: 700, fontSize: 13, border: "none", cursor: "pointer" }}>
+          {phantom.connecting ? "Connecting..." : phantom.hasPhantom ? "Connect Phantom" : "Install Phantom →"}
+        </button>
+      </div>
+    ) : !isSolanaSource && !address ? (
+      <div style={{ background: "rgba(10,12,22,0.9)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: "48px 24px", textAlign: "center" }}>
+        <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 8 }}>Connect your wallet</div>
+        <div style={{ fontSize: 13, color: "#6B7FA3", marginBottom: 20 }}>Connect to see your limit orders.</div>
+        <ConnectButton />
+      </div>
+    ) : ordersLoading ? (
               <div style={{ textAlign: "center", padding: 40, fontSize: 13, fontFamily: "monospace", color: "#4B5A72" }}>Loading...</div>
             ) : orders.length === 0 ? (
               <div style={{ background: "rgba(10,12,22,0.9)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: "48px 24px", textAlign: "center" }}>
