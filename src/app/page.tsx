@@ -1,325 +1,339 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { SwapInterface } from "@/components/SwapInterface";
 
-const FAQS = [
-  { q: "What is MultiMesh?", a: "MultiMesh is a cross-chain swap aggregator. Connect your wallet, pick your tokens and chains, and we find the best route across 20+ bridges and DEXes — in one click." },
-  { q: "Which chains are supported?", a: "Ethereum, Polygon, BNB Chain, Arbitrum, Optimism, and Base. More chains coming." },
-  { q: "How does routing work?", a: "We use LI.FI's engine which scans every available bridge and DEX simultaneously to find the optimal path based on output amount, fees, and execution time." },
-  { q: "Is MultiMesh non-custodial?", a: "Yes. MultiMesh never touches your funds. All swaps execute directly between your wallet and smart contracts on-chain." },
-  { q: "What fees does MultiMesh charge?", a: "0.15% protocol fee per swap, collected automatically. Network gas fees apply separately." },
-  { q: "Can I swap any token?", a: "Any token with liquidity on a supported DEX. Paste any contract address into the token selector and we search for available routes." },
+const STATS = [
+  { label: "Supported Chains", value: "6", suffix: "" },
+  { label: "Bridges & DEXes", value: "20", suffix: "+" },
+  { label: "Protocol Fee", value: "0.15", suffix: "%" },
+  { label: "Open Source", value: "100", suffix: "%" },
 ];
 
-const CHAINS = [
-  { name: "Ethereum", logo: "https://assets.coingecko.com/coins/images/279/small/ethereum.png" },
-  { name: "Polygon",  logo: "https://assets.coingecko.com/coins/images/4713/small/polygon.png" },
-  { name: "BNB",      logo: "https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png" },
-  { name: "Arbitrum", logo: "https://assets.coingecko.com/coins/images/16547/small/photo_2023-03-29_21.47.00.jpeg" },
-  { name: "Optimism", logo: "https://assets.coingecko.com/coins/images/25244/small/Optimism.png" },
-  { name: "Base",     logo: "https://assets.coingecko.com/coins/images/35506/small/base.png" },
+const FEATURES = [
+  {
+    icon: "⟁",
+    title: "Cross-Chain Limit Orders",
+    desc: "Set a target price and we execute when the market hits it — across any chain. No competitor offers this cross-chain.",
+    tag: "UNIQUE",
+  },
+  {
+    icon: "◎",
+    title: "Best Route Engine",
+    desc: "We scan 20+ bridges and DEXes simultaneously and pick the cheapest, fastest route — all in one transaction.",
+    tag: null,
+  },
+  {
+    icon: "⬟",
+    title: "Gas Refuel",
+    desc: "Need ETH on Arbitrum? Bridge native gas tokens to any chain in one click — never get stranded without gas again.",
+    tag: null,
+  },
+  {
+    icon: "◈",
+    title: "Points & Referrals",
+    desc: "Early users earn points on every swap. Refer friends and earn 25% more. Points convert at token launch.",
+    tag: "OG REWARDS",
+  },
+  {
+    icon: "⬡",
+    title: "Widget Integration",
+    desc: "Embed a full cross-chain swap interface in your app in 3 lines of code. Revenue share available for partners.",
+    tag: "B2B",
+  },
+  {
+    icon: "⟠",
+    title: "Live Analytics",
+    desc: "Full transparency — every swap, route, and fee is tracked on-chain and visible in our public analytics dashboard.",
+    tag: null,
+  },
 ];
 
-const STEPS = [
-  { n: "01", title: "Connect Wallet", desc: "MetaMask, Phantom, WalletConnect — any EVM wallet works." },
-  { n: "02", title: "Pick Your Tokens", desc: "Choose source and destination chain, any token pair." },
-  { n: "03", title: "Find Best Route", desc: "We scan 20+ bridges and DEXes in real time." },
-  { n: "04", title: "Confirm & Done", desc: "One transaction. Funds arrive on the destination chain." },
-];
-
-export default function Home() {
-  const [showApp, setShowApp] = useState(false);
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [cookieAccepted, setCookieAccepted] = useState(true);
-  const [scrolled, setScrolled] = useState(false);
-
+function useCountUp(target: number, duration = 1500, start = false) {
+  const [count, setCount] = useState(0);
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-const ref = params.get("ref");
-if (ref) localStorage.setItem("mm_referral_code", ref.toUpperCase());
-    const consent = localStorage.getItem("mm_cookie_consent");
-    if (!consent) setCookieAccepted(false);
-    const onScroll = () => setScrolled(window.scrollY > 40);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
+    if (!start) return;
+    let startTime: number;
+    const step = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      setCount(Math.floor(progress * target));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, [start, target, duration]);
+  return count;
+}
 
-  const acceptCookies = () => {
-    localStorage.setItem("mm_cookie_consent", "true");
-    setCookieAccepted(true);
-  };
-
-  if (showApp) return (
-    <div style={{ position: "relative" }}>
-      <button onClick={() => setShowApp(false)} style={{
-        position: "fixed", top: 52, left: 16, zIndex: 400,
-        background: "rgba(13,17,23,0.9)", border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: 10, padding: "6px 14px", color: "#A0B0C8",
-        fontSize: 12, fontFamily: "monospace", cursor: "pointer",
-        display: "flex", alignItems: "center", gap: 6, backdropFilter: "blur(10px)",
-      }}>← Home</button>
-      <SwapInterface />
-    </div>
-  );
+function StatCard({ label, value, suffix, animate }: { label: string; value: string; suffix: string; animate: boolean }) {
+  const num = parseFloat(value);
+  const count = useCountUp(num * (suffix === "%" && num < 1 ? 100 : 1), 1200, animate);
+  const display = suffix === "%" && num < 1
+    ? (count / 100).toFixed(2)
+    : suffix === "+" ? count.toString()
+    : count.toString();
 
   return (
-    <div style={{ minHeight: "100vh", background: "#04060E", fontFamily: "'DM Sans', sans-serif", color: "#EEF2FF", overflowX: "hidden" }}>
-      <style dangerouslySetInnerHTML={{__html: `
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: #04060E; }
-        @keyframes fadeUp { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
-        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
-        @keyframes pulse { 0%,100% { opacity:0.4; transform:scale(1); } 50% { opacity:0.7; transform:scale(1.05); } }
-        @keyframes scrollX { from { transform:translateX(0); } to { transform:translateX(-50%); } }
-        .fade-up { animation: fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) forwards; opacity:0; }
-        .fade-up-1 { animation-delay:0.1s; }
-        .fade-up-2 { animation-delay:0.25s; }
-        .fade-up-3 { animation-delay:0.4s; }
-        .fade-up-4 { animation-delay:0.55s; }
-        .btn-primary { transition: all 0.2s; }
-        .btn-primary:hover { transform:translateY(-2px); box-shadow:0 12px 40px rgba(99,102,241,0.4); }
-        .btn-primary:active { transform:translateY(0); }
-        .step-card { transition: border-color 0.2s, transform 0.2s; }
-        .step-card:hover { border-color: rgba(99,102,241,0.3) !important; transform:translateY(-4px); }
-        .faq-row { transition: background 0.15s; cursor:pointer; }
-        .faq-row:hover { background: rgba(255,255,255,0.03) !important; }
-        .nav-link { transition: color 0.15s; color: #6B7FA3; text-decoration:none; font-size:14px; font-weight:500; }
-        .nav-link:hover { color: #EEF2FF; }
-        .chain-badge { transition: all 0.2s; }
-        .chain-badge:hover { background: rgba(99,102,241,0.12) !important; border-color: rgba(99,102,241,0.3) !important; transform:translateY(-2px); }
-        @media (max-width: 768px) {
-          .hero-title { font-size: 36px !important; }
-          .hero-sub { font-size: 15px !important; }
-          .nav-links { display: none !important; }
-          .steps-grid { grid-template-columns: 1fr 1fr !important; }
-          .hero-buttons { flex-direction: column !important; align-items: center !important; }
-          .stats-row { gap: 24px !important; flex-wrap: wrap !important; justify-content: center !important; }
-          .section-pad { padding: 60px 20px !important; }
-          .team-grid { grid-template-columns: 1fr !important; }
-        }
-        @media (max-width: 480px) {
-          .steps-grid { grid-template-columns: 1fr !important; }
-          .chains-wrap { gap: 8px !important; }
-        }
+    <div style={{
+      padding: "24px 28px",
+      background: "rgba(99,102,241,0.04)",
+      border: "1px solid rgba(99,102,241,0.12)",
+      borderRadius: 16,
+      textAlign: "center",
+      transition: "border-color 0.3s ease",
+    }}
+      onMouseEnter={e => (e.currentTarget.style.borderColor = "rgba(99,102,241,0.3)")}
+      onMouseLeave={e => (e.currentTarget.style.borderColor = "rgba(99,102,241,0.12)")}
+    >
+      <div style={{ fontSize: 36, fontWeight: 800, fontFamily: "'Space Grotesk',sans-serif", color: "#EEF2FF", letterSpacing: -1 }}>
+        {display}{suffix}
+      </div>
+      <div style={{ fontSize: 11, fontFamily: "monospace", color: "#4B5A72", letterSpacing: 1.5, marginTop: 6 }}>{label.toUpperCase()}</div>
+    </div>
+  );
+}
+
+export default function LandingPage() {
+  const [statsVisible, setStatsVisible] = useState(false);
+  const statsRef = useRef<HTMLDivElement>(null);
+  const swapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => { if (entry.isIntersecting) setStatsVisible(true); },
+      { threshold: 0.3 }
+    );
+    if (statsRef.current) observer.observe(statsRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div style={{ minHeight: "100vh", background: "#04060E", color: "#EEF2FF", fontFamily: "'DM Sans', sans-serif", overflowX: "hidden" }}>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700;800&display=swap');
+        @keyframes fadeUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
+        @keyframes gridMove { from{background-position:0 0} to{background-position:72px 72px} }
+        .fade-up { animation: fadeUp 0.7s ease forwards; }
+        .fade-up-1 { animation: fadeUp 0.7s 0.1s ease both; }
+        .fade-up-2 { animation: fadeUp 0.7s 0.25s ease both; }
+        .fade-up-3 { animation: fadeUp 0.7s 0.4s ease both; }
+        .fade-up-4 { animation: fadeUp 0.7s 0.55s ease both; }
+        * { box-sizing: border-box; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #04060E; }
+        ::-webkit-scrollbar-thumb { background: #1A1F2E; border-radius: 2px; }
       `}} />
 
-      {/* Cookie Banner */}
-      {!cookieAccepted && (
-        <div style={{ position:"fixed", bottom:0, left:0, right:0, zIndex:500, background:"rgba(10,12,22,0.98)", borderTop:"1px solid rgba(255,255,255,0.06)", padding:"14px 24px", display:"flex", alignItems:"center", justifyContent:"space-between", gap:16, flexWrap:"wrap", backdropFilter:"blur(12px)" }}>
-          <div style={{ fontSize:12, color:"#6B7FA3", maxWidth:560, lineHeight:1.6 }}>
-            We use analytics to improve MultiMesh. By continuing you agree to our <a href="/privacy" style={{ color:"#818CF8", textDecoration:"none" }}>Privacy Policy</a>.
-          </div>
-          <div style={{ display:"flex", gap:8 }}>
-            <button onClick={acceptCookies} style={{ padding:"7px 18px", borderRadius:8, background:"#6366F1", color:"#fff", border:"none", fontWeight:600, fontSize:12, cursor:"pointer" }}>Accept</button>
-            <button onClick={acceptCookies} style={{ padding:"7px 18px", borderRadius:8, background:"transparent", color:"#6B7FA3", border:"1px solid rgba(255,255,255,0.07)", fontWeight:600, fontSize:12, cursor:"pointer" }}>Decline</button>
-          </div>
-        </div>
-      )}
-
-      {/* Background Effects */}
-      <div style={{ position:"fixed", inset:0, pointerEvents:"none", zIndex:0 }}>
-        <div style={{ position:"absolute", top:"-20%", left:"50%", transform:"translateX(-50%)", width:900, height:900, background:"radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 65%)", animation:"pulse 8s ease-in-out infinite" }} />
-        <div style={{ position:"absolute", bottom:"-10%", right:"-10%", width:600, height:600, background:"radial-gradient(circle, rgba(139,92,246,0.06) 0%, transparent 65%)" }} />
-        <div style={{ position:"absolute", inset:0, backgroundImage:"linear-gradient(rgba(99,102,241,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.025) 1px, transparent 1px)", backgroundSize:"72px 72px" }} />
-      </div>
+      {/* Background grid */}
+      <div style={{
+        position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0,
+        backgroundImage: "linear-gradient(rgba(99,102,241,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(99,102,241,0.025) 1px,transparent 1px)",
+        backgroundSize: "72px 72px",
+      }} />
+      <div style={{ position: "fixed", top: -300, left: "50%", transform: "translateX(-50%)", width: 1000, height: 800, background: "radial-gradient(ellipse,rgba(99,102,241,0.06) 0%,transparent 65%)", pointerEvents: "none", zIndex: 0 }} />
 
       {/* Nav */}
       <nav style={{
-        position:"fixed", top:0, left:0, right:0, zIndex:100,
-        background: scrolled ? "rgba(4,6,14,0.95)" : "transparent",
-        backdropFilter: scrolled ? "blur(20px)" : "none",
-        borderBottom: scrolled ? "1px solid rgba(255,255,255,0.05)" : "none",
-        transition:"all 0.3s",
-        padding:"0 32px", height:64, display:"flex", alignItems:"center", justifyContent:"space-between",
+        position: "fixed", top: 0, left: 0, right: 0, zIndex: 100,
+        height: 64, display: "flex", alignItems: "center", justifyContent: "space-between",
+        padding: "0 32px", borderBottom: "1px solid rgba(255,255,255,0.04)",
+        background: "rgba(4,6,14,0.9)", backdropFilter: "blur(16px)",
       }}>
-        <div style={{ display:"flex", alignItems:"center", gap:32 }}>
-          <div>
-            <img src="/logo.jpg" width={48} height={48} style={{ borderRadius: "50%", mixBlendMode: "screen", marginRight: 8 }} />
-<span style={{ fontSize:17, fontWeight:700, fontFamily:"'Space Grotesk', sans-serif", color:"#EEF2FF" }}>MULTI</span>
-<span style={{ fontSize:17, fontWeight:700, fontFamily:"'Space Grotesk', sans-serif", color:"#818CF8" }}>MESH</span>
-          </div>
-          <div className="nav-links" style={{ display:"flex", gap:24 }}>
-            <a href="#how" className="nav-link">How it works</a>
-            <a href="#why" className="nav-link">Why MultiMesh</a>
-            <a href="/points" className="nav-link">Points</a>
-            <a href="/docs" className="nav-link">Docs</a>
-            <a href="/analytics" className="nav-link">Analytics</a>
-            <a href="/limit-orders" className="nav-link">Limit Orders</a>
-          </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <img src="/logo.jpg" width={36} height={36} style={{ borderRadius: "50%", mixBlendMode: "screen" }} />
+          <span style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Space Grotesk',sans-serif" }}>
+            MULTI<span style={{ color: "#818CF8" }}>MESH</span>
+          </span>
+          <span style={{ fontSize: 9, fontFamily: "monospace", color: "#F59E0B", background: "rgba(245,158,11,0.1)", padding: "2px 6px", borderRadius: 4, letterSpacing: 1 }}>BETA</span>
         </div>
-        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-          <span style={{ fontSize:10, fontFamily:"monospace", color:"#F59E0B", background:"rgba(245,158,11,0.1)", padding:"3px 8px", borderRadius:5, letterSpacing:1 }}>BETA</span>
-          <button className="btn-primary" onClick={() => setShowApp(true)} style={{ padding:"9px 20px", borderRadius:10, background:"#6366F1", color:"#fff", border:"none", fontWeight:600, fontSize:13, cursor:"pointer" }}>
-            Launch App →
-          </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+          {[
+            { href: "/limit-orders", label: "Limit Orders" },
+            { href: "/points", label: "Points ✦" },
+            { href: "/refuel", label: "Refuel" },
+            { href: "/analytics", label: "Analytics" },
+            { href: "/docs", label: "Docs" },
+          ].map(({ href, label }) => (
+            <Link key={href} href={href} style={{ fontSize: 13, fontWeight: 500, color: "#6B7FA3", textDecoration: "none", transition: "color 0.2s" }}
+              onMouseEnter={e => (e.currentTarget.style.color = "#EEF2FF")}
+              onMouseLeave={e => (e.currentTarget.style.color = "#6B7FA3")}
+            >{label}</Link>
+          ))}
+          <ConnectButton chainStatus="none" showBalance={false} />
         </div>
       </nav>
 
       {/* Hero */}
-      <section style={{ position:"relative", zIndex:1, paddingTop:140, paddingBottom:80, textAlign:"center", padding:"140px 24px 80px" }}>
-        <div className="fade-up fade-up-1" style={{ display:"inline-flex", alignItems:"center", gap:8, background:"rgba(99,102,241,0.1)", border:"1px solid rgba(99,102,241,0.2)", borderRadius:100, padding:"6px 16px", marginBottom:28 }}>
-          <div style={{ width:7, height:7, borderRadius:"50%", background:"#22C55E" }} />
-          <span style={{ fontSize:12, fontFamily:"monospace", color:"#818CF8", letterSpacing:0.5 }}>Live on Mainnet · Beta</span>
+      <section style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "100px 20px 60px", position: "relative", zIndex: 1 }}>
+        <div className="fade-up" style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.2)", borderRadius: 100, padding: "6px 16px", marginBottom: 28 }}>
+          <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#22C55E", animation: "pulse 2s infinite" }} />
+          <span style={{ fontSize: 11, fontFamily: "monospace", color: "#818CF8", letterSpacing: 0.5 }}>Live on Mainnet · 6 Chains · 20+ Protocols</span>
         </div>
 
-        <h1 className="fade-up fade-up-2 hero-title" style={{ fontSize:"clamp(40px,6vw,72px)", fontWeight:700, fontFamily:"'Space Grotesk', sans-serif", letterSpacing:-2, lineHeight:1.05, marginBottom:24, maxWidth:760, margin:"0 auto 24px" }}>
-          Swap any token.<br />
-          <span style={{ background:"linear-gradient(135deg, #818CF8, #C084FC)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent" }}>Across any chain.</span>
+        <h1 className="fade-up-1" style={{
+          fontSize: "clamp(40px,7vw,80px)", fontWeight: 800, fontFamily: "'Space Grotesk',sans-serif",
+          letterSpacing: -3, lineHeight: 1.05, textAlign: "center", margin: "0 0 20px",
+          maxWidth: 900,
+        }}>
+          The best route across
+          <span style={{ color: "#818CF8" }}> any chain</span>,<br />in one click.
         </h1>
 
-        <p className="fade-up fade-up-3 hero-sub" style={{ fontSize:17, color:"#6B7FA3", maxWidth:500, margin:"0 auto 40px", lineHeight:1.75 }}>
-          MultiMesh finds the best cross-chain route in seconds — scanning 20+ bridges and DEXes simultaneously. One click. Done.
+        <p className="fade-up-2" style={{ fontSize: "clamp(14px,2vw,18px)", color: "#6B7FA3", textAlign: "center", maxWidth: 560, lineHeight: 1.7, margin: "0 0 40px" }}>
+          MultiMesh scans 20+ bridges and DEXes simultaneously to find the cheapest, fastest route for your cross-chain swap — and executes it in one transaction.
         </p>
 
-        <div className="fade-up fade-up-4 hero-buttons" style={{ display:"flex", gap:12, justifyContent:"center", marginBottom:64 }}>
-          <button className="btn-primary" onClick={() => setShowApp(true)} style={{ padding:"15px 36px", borderRadius:12, background:"#6366F1", color:"#fff", border:"none", fontWeight:700, fontSize:15, cursor:"pointer" }}>
-            Start Swapping →
+        <div className="fade-up-3" style={{ display: "flex", gap: 12, flexWrap: "wrap", justifyContent: "center" }}>
+          <button
+            onClick={() => swapRef.current?.scrollIntoView({ behavior: "smooth" })}
+            style={{
+              padding: "14px 28px", borderRadius: 12, background: "#6366F1", color: "#fff",
+              border: "none", fontWeight: 700, fontSize: 15, cursor: "pointer",
+              fontFamily: "'DM Sans',sans-serif", transition: "all 0.2s",
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background = "#4F46E5"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "#6366F1"; e.currentTarget.style.transform = "translateY(0)"; }}
+          >
+            Start Swapping ↓
           </button>
-          <a href="/widget" style={{ padding:"15px 28px", borderRadius:12, background:"transparent", color:"#818CF8", border:"1px solid rgba(99,102,241,0.3)", fontWeight:600, fontSize:15, cursor:"pointer", textDecoration:"none", display:"inline-flex", alignItems:"center" }}>
-            Embed Widget
-          </a>
+          <Link href="/limit-orders" style={{
+            padding: "14px 28px", borderRadius: 12, background: "transparent", color: "#818CF8",
+            border: "1px solid rgba(99,102,241,0.3)", fontWeight: 700, fontSize: 15, textDecoration: "none",
+            fontFamily: "'DM Sans',sans-serif", transition: "all 0.2s", display: "inline-block",
+          }}
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(99,102,241,0.08)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; }}
+          >
+            Limit Orders →
+          </Link>
         </div>
 
-        {/* Stats */}
-        <div className="fade-up stats-row" style={{ display:"flex", justifyContent:"center", gap:48, animationDelay:"0.6s", opacity:0 }}>
-          {[["6", "Chains"], ["20+", "Bridges & DEXes"], ["15bps", "Fee"], ["Live", "Status"]].map(([v, l]) => (
-            <div key={l}>
-              <div style={{ fontSize:22, fontWeight:700, color:"#EEF2FF", fontFamily:"'Space Grotesk',sans-serif" }}>{v}</div>
-              <div style={{ fontSize:11, fontFamily:"monospace", color:"#4B5A72", letterSpacing:1, marginTop:4 }}>{l}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Chain badges */}
-      <section style={{ position:"relative", zIndex:1, padding:"0 24px 80px" }}>
-        <div className="chains-wrap" style={{ display:"flex", justifyContent:"center", gap:10, flexWrap:"wrap" }}>
-          {CHAINS.map(c => (
-            <div key={c.name} className="chain-badge" style={{ display:"flex", alignItems:"center", gap:8, padding:"8px 16px", background:"rgba(255,255,255,0.03)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:100 }}>
-              <img src={c.logo} width={20} height={20} style={{ borderRadius:"50%" }} />
-              <span style={{ fontSize:13, fontWeight:500, color:"#A0B0C8" }}>{c.name}</span>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* How it works */}
-      <section id="how" className="section-pad" style={{ position:"relative", zIndex:1, maxWidth:1040, margin:"0 auto", padding:"80px 24px" }}>
-        <div style={{ textAlign:"center", marginBottom:56 }}>
-          <div style={{ fontSize:11, fontFamily:"monospace", color:"#4B5A72", letterSpacing:2, marginBottom:12 }}>HOW IT WORKS</div>
-          <h2 style={{ fontSize:"clamp(26px,4vw,40px)", fontWeight:700, fontFamily:"'Space Grotesk',sans-serif", letterSpacing:-1 }}>Four steps to any chain.</h2>
-        </div>
-        <div className="steps-grid" style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:16 }}>
-          {STEPS.map(s => (
-            <div key={s.n} className="step-card" style={{ background:"rgba(10,12,22,0.8)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:16, padding:"24px 20px" }}>
-              <div style={{ fontSize:12, fontFamily:"monospace", color:"#6366F1", marginBottom:16, letterSpacing:1 }}>{s.n}</div>
-              <div style={{ fontSize:15, fontWeight:600, marginBottom:8, fontFamily:"'Space Grotesk',sans-serif" }}>{s.title}</div>
-              <div style={{ fontSize:13, color:"#6B7FA3", lineHeight:1.6 }}>{s.desc}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Why MultiMesh */}
-      <section id="why" className="section-pad" style={{ position:"relative", zIndex:1, maxWidth:1040, margin:"0 auto", padding:"80px 24px" }}>
-        <div style={{ textAlign:"center", marginBottom:56 }}>
-          <div style={{ fontSize:11, fontFamily:"monospace", color:"#4B5A72", letterSpacing:2, marginBottom:12 }}>WHY MULTIMESH</div>
-          <h2 style={{ fontSize:"clamp(26px,4vw,40px)", fontWeight:700, fontFamily:"'Space Grotesk',sans-serif", letterSpacing:-1 }}>Built for real users.</h2>
-        </div>
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(280px,1fr))", gap:16 }}>
+        {/* Chain logos */}
+        <div className="fade-up-4" style={{ display: "flex", gap: 8, marginTop: 48, alignItems: "center" }}>
+          <span style={{ fontSize: 11, fontFamily: "monospace", color: "#4B5A72", letterSpacing: 1 }}>SUPPORTED</span>
           {[
-            { icon:"◈", title:"Best route, every time", desc:"We don't just check one bridge. We scan all of them simultaneously and pick the path with the best output after fees." },
-            { icon:"◉", title:"Risk labels on every route", desc:"Before you confirm, we show you bridge reliability, number of steps, and execution time. You decide with full context." },
-            { icon:"⬡", title:"Any token, any pair", desc:"Paste any contract address and we search for available routes. Not limited to a preset list." },
-            { icon:"✦", title:"Points for every swap", desc:"Early users earn OG points per swap. Check your balance and referral link at themultimesh.com/points." },
-            { icon:"⚡", title:"Gas refuel built in", desc:"Need native gas on a new chain? Use the refuel feature to bridge small amounts of native tokens in one click." },
-            { icon:"◻", title:"Embed anywhere", desc:"Integrate MultiMesh into your app in 3 lines of code with our embeddable widget. Revenue share available." },
-          ].map(f => (
-            <div key={f.title} className="step-card" style={{ background:"rgba(10,12,22,0.8)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:16, padding:"24px" }}>
-              <div style={{ fontSize:22, marginBottom:14, color:"#818CF8" }}>{f.icon}</div>
-              <div style={{ fontSize:15, fontWeight:600, marginBottom:8, fontFamily:"'Space Grotesk',sans-serif" }}>{f.title}</div>
-              <div style={{ fontSize:13, color:"#6B7FA3", lineHeight:1.6 }}>{f.desc}</div>
-            </div>
+            "https://assets.coingecko.com/coins/images/279/small/ethereum.png",
+            "https://assets.coingecko.com/coins/images/4713/small/polygon.png",
+            "https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png",
+            "https://assets.coingecko.com/coins/images/16547/small/photo_2023-03-29_21.47.00.jpeg",
+            "https://assets.coingecko.com/coins/images/25244/small/Optimism.png",
+            "https://assets.coingecko.com/coins/images/35506/small/base.png",
+          ].map((src, i) => (
+            <img key={i} src={src} width={24} height={24} style={{ borderRadius: "50%", opacity: 0.7 }} />
           ))}
         </div>
       </section>
 
-      {/* Team */}
-      <section className="section-pad" style={{ position:"relative", zIndex:1, maxWidth:800, margin:"0 auto", padding:"80px 24px" }}>
-        <div style={{ textAlign:"center", marginBottom:48 }}>
-          <div style={{ fontSize:11, fontFamily:"monospace", color:"#4B5A72", letterSpacing:2, marginBottom:12 }}>TEAM</div>
-          <h2 style={{ fontSize:"clamp(26px,4vw,40px)", fontWeight:700, fontFamily:"'Space Grotesk',sans-serif", letterSpacing:-1 }}>Who builds MultiMesh.</h2>
+      {/* Stats */}
+      <section ref={statsRef} style={{ padding: "60px 20px", position: "relative", zIndex: 1 }}>
+        <div style={{ maxWidth: 900, margin: "0 auto", display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(180px,1fr))", gap: 16 }}>
+          {STATS.map(s => <StatCard key={s.label} {...s} animate={statsVisible} />)}
         </div>
-        <div className="team-grid" style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
-          {[
-            { name:"Michael Kurz", role:"Co-Founder & Engineer", desc:"Full-stack developer building MultiMesh's infrastructure, routing engine, and product." },
-{ name:"Tomide Akinrodoye", role:"Founder & Product", desc:"Product direction, community, and business development. Based in Angola." },
-          ].map(m => (
-            <div key={m.name} style={{ background:"rgba(10,12,22,0.8)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:16, padding:"24px" }}>
-              <div style={{ width:44, height:44, borderRadius:"50%", background:"linear-gradient(135deg,#6366F1,#8B5CF6)", marginBottom:14, display:"flex", alignItems:"center", justifyContent:"center", fontSize:16, fontWeight:700, color:"#fff", fontFamily:"'Space Grotesk',sans-serif" }}>
-                {m.name[0]}
+      </section>
+
+      {/* Features */}
+      <section style={{ padding: "80px 20px", position: "relative", zIndex: 1 }}>
+        <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+          <div style={{ textAlign: "center", marginBottom: 48 }}>
+            <div style={{ fontSize: 10, fontFamily: "monospace", color: "#4B5A72", letterSpacing: 2, marginBottom: 12 }}>WHAT WE BUILT</div>
+            <h2 style={{ fontSize: "clamp(28px,4vw,44px)", fontWeight: 700, fontFamily: "'Space Grotesk',sans-serif", letterSpacing: -1, margin: 0 }}>
+              Everything you need.<br /><span style={{ color: "#818CF8" }}>Nothing you don't.</span>
+            </h2>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 16 }}>
+            {FEATURES.map(f => (
+              <div key={f.title} style={{
+                padding: "24px", background: "rgba(10,12,22,0.8)", border: "1px solid rgba(255,255,255,0.05)",
+                borderRadius: 16, position: "relative", overflow: "hidden", transition: "all 0.3s",
+              }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = "rgba(99,102,241,0.2)"; e.currentTarget.style.background = "rgba(99,102,241,0.04)"; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(255,255,255,0.05)"; e.currentTarget.style.background = "rgba(10,12,22,0.8)"; }}
+              >
+                {f.tag && (
+                  <div style={{ position: "absolute", top: 16, right: 16, fontSize: 9, fontFamily: "monospace", color: "#818CF8", background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.2)", padding: "2px 7px", borderRadius: 4, letterSpacing: 1 }}>{f.tag}</div>
+                )}
+                <div style={{ fontSize: 28, marginBottom: 12 }}>{f.icon}</div>
+                <div style={{ fontSize: 15, fontWeight: 700, fontFamily: "'Space Grotesk',sans-serif", marginBottom: 8 }}>{f.title}</div>
+                <div style={{ fontSize: 13, color: "#6B7FA3", lineHeight: 1.6 }}>{f.desc}</div>
               </div>
-              <div style={{ fontSize:15, fontWeight:600, marginBottom:4, fontFamily:"'Space Grotesk',sans-serif" }}>{m.name}</div>
-              <div style={{ fontSize:11, fontFamily:"monospace", color:"#6366F1", marginBottom:10, letterSpacing:0.5 }}>{m.role}</div>
-              <div style={{ fontSize:13, color:"#6B7FA3", lineHeight:1.6 }}>{m.desc}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* FAQ */}
-      <section className="section-pad" style={{ position:"relative", zIndex:1, maxWidth:680, margin:"0 auto", padding:"80px 24px" }}>
-        <div style={{ textAlign:"center", marginBottom:48 }}>
-          <div style={{ fontSize:11, fontFamily:"monospace", color:"#4B5A72", letterSpacing:2, marginBottom:12 }}>FAQ</div>
-          <h2 style={{ fontSize:"clamp(26px,4vw,40px)", fontWeight:700, fontFamily:"'Space Grotesk',sans-serif", letterSpacing:-1 }}>Common questions.</h2>
-        </div>
-        <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-          {FAQS.map((f, i) => (
-            <div key={i} onClick={() => setOpenFaq(openFaq === i ? null : i)} className="faq-row" style={{ background:"rgba(10,12,22,0.8)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:14, overflow:"hidden" }}>
-              <div style={{ padding:"16px 20px", display:"flex", justifyContent:"space-between", alignItems:"center", gap:12 }}>
-                <span style={{ fontSize:14, fontWeight:500, color:"#EEF2FF" }}>{f.q}</span>
-                <span style={{ color:"#4B5A72", fontSize:18, flexShrink:0, transition:"transform 0.2s", display:"block", transform:openFaq === i ? "rotate(45deg)" : "none" }}>+</span>
-              </div>
-              {openFaq === i && (
-                <div style={{ padding:"0 20px 16px", fontSize:13, color:"#6B7FA3", lineHeight:1.7 }}>{f.a}</div>
-              )}
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="section-pad" style={{ position:"relative", zIndex:1, textAlign:"center", padding:"80px 24px 120px" }}>
-        <div style={{ maxWidth:480, margin:"0 auto", padding:40, background:"rgba(10,12,22,0.9)", border:"1px solid rgba(99,102,241,0.15)", borderRadius:20 }}>
-          <h2 style={{ fontSize:26, fontWeight:700, marginBottom:10, fontFamily:"'Space Grotesk',sans-serif", letterSpacing:-0.5 }}>Ready to swap?</h2>
-          <p style={{ fontSize:13, color:"#6B7FA3", marginBottom:28, lineHeight:1.7 }}>Connect your wallet and find the best cross-chain route in seconds.</p>
-          <button className="btn-primary" onClick={() => setShowApp(true)} style={{ width:"100%", padding:15, borderRadius:12, background:"#6366F1", color:"#fff", border:"none", fontWeight:700, fontSize:15, cursor:"pointer" }}>
-            Launch MultiMesh →
-          </button>
-          <div style={{ marginTop:16, display:"flex", justifyContent:"center", gap:20 }}>
-            <a href="/points" style={{ fontSize:12, color:"#818CF8", textDecoration:"none" }}>Points Program ✦</a>
-            <a href="/docs" style={{ fontSize:12, color:"#6B7FA3", textDecoration:"none" }}>Embed Widget</a>
-            <a href="https://t.me/multi_mesh" target="_blank" rel="noopener noreferrer" style={{ fontSize:12, color:"#6B7FA3", textDecoration:"none" }}>Telegram</a>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer style={{ position:"relative", zIndex:1, borderTop:"1px solid rgba(255,255,255,0.04)", padding:"24px 32px", display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:12 }}>
-        <div style={{ display:"flex", alignItems:"center", gap:6 }}>
-          <span style={{ fontSize:13, fontWeight:700, fontFamily:"'Space Grotesk',sans-serif" }}>MULTI<span style={{ color:"#818CF8" }}>MESH</span></span>
-          <span style={{ fontSize:11, fontFamily:"monospace", color:"#2D3A50" }}>Beta v0.1</span>
+      {/* Swap Section */}
+      <section ref={swapRef} id="swap" style={{ position: "relative", zIndex: 1 }}>
+        <div style={{ textAlign: "center", padding: "40px 20px 0" }}>
+          <div style={{ fontSize: 10, fontFamily: "monospace", color: "#4B5A72", letterSpacing: 2, marginBottom: 12 }}>START SWAPPING</div>
+          <h2 style={{ fontSize: "clamp(24px,4vw,40px)", fontWeight: 700, fontFamily: "'Space Grotesk',sans-serif", letterSpacing: -1, margin: "0 0 8px" }}>
+            Find the best route now
+          </h2>
+          <p style={{ color: "#6B7FA3", fontSize: 14, margin: 0 }}>Live on mainnet. Non-custodial. 0.15% fee.</p>
         </div>
-        <div style={{ fontSize:11, fontFamily:"monospace", color:"#2D3A50", display:"flex", gap:16, flexWrap:"wrap" }}>
-          <a href="/privacy" style={{ color:"#2D3A50", textDecoration:"none" }}>Privacy</a>
-          <a href="/terms" style={{ color:"#2D3A50", textDecoration:"none" }}>Terms</a>
-          <a href="/points" style={{ color:"#818CF8", textDecoration:"none" }}>Points ✦</a>
-          
-          <a href="/refuel" style={{ color:"#2D3A50", textDecoration:"none" }}>Refuel</a>
-          <a href="/limit-orders" style={{ color:"#818CF8", textDecoration:"none" }}>Limit Orders ↗</a>
-          <a href="https://t.me/multi_mesh" target="_blank" rel="noopener noreferrer" style={{ color:"#2D3A50", textDecoration:"none" }}>Telegram</a>
-          <span style={{ color:"#2D3A50" }}>Powered by LI.FI</span>
+        <SwapInterface />
+      </section>
+
+      {/* Footer */}
+      <footer style={{ borderTop: "1px solid rgba(255,255,255,0.04)", padding: "48px 20px", position: "relative", zIndex: 1 }}>
+        <div style={{ maxWidth: 1000, margin: "0 auto", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 32 }}>
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+              <img src="/logo.jpg" width={28} height={28} style={{ borderRadius: "50%", mixBlendMode: "screen" }} />
+              <span style={{ fontSize: 14, fontWeight: 700, fontFamily: "'Space Grotesk',sans-serif" }}>MULTI<span style={{ color: "#818CF8" }}>MESH</span></span>
+            </div>
+            <p style={{ fontSize: 12, color: "#4B5A72", margin: 0, maxWidth: 220, lineHeight: 1.6 }}>
+              Cross-chain swap aggregator. Non-custodial, open source, live on mainnet.
+            </p>
+            <div style={{ display: "flex", gap: 12, marginTop: 16 }}>
+              <a href="https://twitter.com/MultiMeshXYZ" target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, fontFamily: "monospace", color: "#4B5A72", textDecoration: "none" }}>Twitter ↗</a>
+              <a href="https://github.com/kurzmichael02-hue/multimesh" target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, fontFamily: "monospace", color: "#4B5A72", textDecoration: "none" }}>GitHub ↗</a>
+            </div>
+          </div>
+          <div style={{ display: "flex", gap: 48, flexWrap: "wrap" }}>
+            <div>
+              <div style={{ fontSize: 10, fontFamily: "monospace", color: "#4B5A72", letterSpacing: 1.5, marginBottom: 14 }}>PRODUCT</div>
+              {[
+                { href: "/#swap", label: "Swap" },
+                { href: "/limit-orders", label: "Limit Orders" },
+                { href: "/refuel", label: "Gas Refuel" },
+                { href: "/points", label: "Points" },
+                { href: "/analytics", label: "Analytics" },
+              ].map(({ href, label }) => (
+                <div key={href} style={{ marginBottom: 8 }}>
+                  <Link href={href} style={{ fontSize: 13, color: "#6B7FA3", textDecoration: "none" }}>{label}</Link>
+                </div>
+              ))}
+            </div>
+            <div>
+              <div style={{ fontSize: 10, fontFamily: "monospace", color: "#4B5A72", letterSpacing: 1.5, marginBottom: 14 }}>DEVELOPERS</div>
+              {[
+                { href: "/widget", label: "Widget" },
+                { href: "/docs", label: "Docs" },
+                { href: "https://github.com/kurzmichael02-hue/multimesh", label: "GitHub" },
+              ].map(({ href, label }) => (
+                <div key={href} style={{ marginBottom: 8 }}>
+                  <Link href={href} style={{ fontSize: 13, color: "#6B7FA3", textDecoration: "none" }}>{label}</Link>
+                </div>
+              ))}
+            </div>
+            <div>
+              <div style={{ fontSize: 10, fontFamily: "monospace", color: "#4B5A72", letterSpacing: 1.5, marginBottom: 14 }}>LEGAL</div>
+              {[
+                { href: "/privacy", label: "Privacy Policy" },
+                { href: "/terms", label: "Terms of Service" },
+              ].map(({ href, label }) => (
+                <div key={href} style={{ marginBottom: 8 }}>
+                  <Link href={href} style={{ fontSize: 13, color: "#6B7FA3", textDecoration: "none" }}>{label}</Link>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div style={{ maxWidth: 1000, margin: "32px auto 0", paddingTop: 24, borderTop: "1px solid rgba(255,255,255,0.03)", display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: 8 }}>
+          <span style={{ fontSize: 11, fontFamily: "monospace", color: "#1A2030" }}>© 2026 MultiMesh. MIT License.</span>
+          <span style={{ fontSize: 11, fontFamily: "monospace", color: "#1A2030" }}>Treasury: 0x4070665b35b032A27413dd19BEB5C81b687e28A8</span>
         </div>
       </footer>
     </div>
