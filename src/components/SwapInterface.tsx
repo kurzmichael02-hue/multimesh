@@ -550,7 +550,7 @@ setError(
               </div>
               <div className="mm-input-row">
                 <input className="mm-amount-input" type="number" placeholder="0.00" value={amount} onChange={e => { setAmount(e.target.value); reset(); }} />
-                <TokenDropdown value={fromToken} walletAddress={address} onChange={t => { setFromToken(t); setFromTokenUnverified(!SUPPORTED_TOKENS[fromChain.id]?.find(x => x.address === t.address)); reset(); }} chainId={fromChain.id} />
+                <TokenDropdown value={fromToken} walletAddress={address} onChange={t => { setFromToken(t); setFromTokenUnverified(false); reset(); }} chainId={fromChain.id} />
               </div>
               {address && balanceData && (
                 <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 6 }}>
@@ -575,7 +575,7 @@ setError(
                 <div style={{ flex: 1, fontSize: 26, fontWeight: 700, color: selectedRoute ? "#818CF8" : "#1A1F2E", minWidth: 0 }}>
                   {selectedRoute ? fmt(selectedRoute.toAmount, toToken.decimals) : "0.00"}
                 </div>
-                <TokenDropdown value={toToken} walletAddress={address} onChange={t => { setToToken(t); setToTokenUnverified(!SUPPORTED_TOKENS[toChain.id]?.find(x => x.address === t.address)); reset(); }} chainId={toChain.id} />
+                <TokenDropdown value={toToken} walletAddress={address} onChange={t => { setToToken(t); setToTokenUnverified(false); reset(); }} chainId={toChain.id} />
               </div>
               {selectedRoute && (
                 <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.04)" }}>
