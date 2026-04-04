@@ -111,7 +111,7 @@ function ChainDropdown({ value, onChange }: { value: typeof SUPPORTED_CHAINS[0];
   );
 }
 
-function TokenDropdown({ value, onChange, chainId }: { value: Token; onChange: (t: Token) => void; chainId: number }) {
+function TokenDropdown({ value, onChange, chainId, walletAddress }: { value: Token; onChange: (t: Token) => void; chainId: number; walletAddress?: string }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [tokens, setTokens] = useState<Token[]>(SUPPORTED_TOKENS[chainId] ?? []);
@@ -130,6 +130,25 @@ function TokenDropdown({ value, onChange, chainId }: { value: Token; onChange: (
   }, [chainId]);
 
   const [tokenPrices, setTokenPrices] = useState<Record<string, string>>({});
+
+  const [balances, setBalances] = useState<Record<string, string>>({});
+
+const fetchBalances = async () => {
+  if (!walletAddress) return;
+  try {
+    const res = await fetch(`https://li.quest/v1/balances/${walletAddress}?chains=${chainId}`);
+    const data = await res.json();
+    const chainBals = data[chainId] ?? [];
+    const bals: Record<string, string> = {};
+    chainBals.forEach((b: any) => {
+      if (b?.address && b?.amount) {
+        const amt = parseFloat(b.amount);
+        if (amt > 0) bals[b.address.toLowerCase()] = amt < 0.0001 ? amt.toExponential(2) : amt.toFixed(4);
+      }
+    });
+    setBalances(bals);
+  } catch {}
+};
 
   const fetchPrices = async (tokenList: Token[]) => {
     try {
@@ -172,7 +191,7 @@ function TokenDropdown({ value, onChange, chainId }: { value: Token; onChange: (
     setTokens(allTokens.filter(t => t.symbol.toLowerCase().includes(q) || t.name.toLowerCase().includes(q)));
   }, [search, allTokens]);
 
-  const handleOpen = () => { setOpen(o => !o); if (!open) fetchTokens(); };
+  const handleOpen = () => { setOpen(o => !o); if (!open) { fetchTokens(); fetchBalances(); } };
 
   const handleCustomToken = async () => {
     if (!customAddress || customAddress.length < 10) return;
@@ -231,7 +250,16 @@ function TokenDropdown({ value, onChange, chainId }: { value: Token; onChange: (
                   <div style={{ fontSize: 13, fontWeight: 700, color: t.address === value.address ? "#818CF8" : "#EEF2FF" }}>{t.symbol}</div>
                   <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
   <div style={{ fontSize: 10, color: "#4B5A72", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 100 }}>{t.name}</div>
-  {tokenPrices[t.address.toLowerCase()] && <div style={{ fontSize: 10, fontFamily: "monospace", color: "#22C55E", flexShrink: 0 }}>${tokenPrices[t.address.toLowerCase()]}</div>}
+  {tokenPrices[t.address.toLowerCase()] && (
+  <div style={{ fontSize: 10, fontFamily: "monospace", color: "#22C55E", flexShrink: 0 }}>
+    ${tokenPrices[t.address.toLowerCase()]}
+  </div>
+
+)} {balances[t.address.toLowerCase()] && (
+  <div style={{ fontSize: 10, fontFamily: "monospace", color: "#818CF8", flexShrink: 0 }}>
+    {balances[t.address.toLowerCase()]}
+  </div>
+)}
 </div>
                 </div>
               </button>
@@ -522,7 +550,7 @@ setError(
               </div>
               <div className="mm-input-row">
                 <input className="mm-amount-input" type="number" placeholder="0.00" value={amount} onChange={e => { setAmount(e.target.value); reset(); }} />
-                <TokenDropdown value={fromToken}  onChange={t => { setFromToken(t); setFromTokenUnverified(!SUPPORTED_TOKENS[fromChain.id]?.find(x => x.address === t.address)); reset(); }} chainId={fromChain.id} />
+                <TokenDropdown value={fromToken} walletAddress={address} onChange={t => { setFromToken(t); setFromTokenUnverified(!SUPPORTED_TOKENS[fromChain.id]?.find(x => x.address === t.address)); reset(); }} chainId={fromChain.id} />
               </div>
               {address && balanceData && (
                 <div style={{ marginTop: 8, display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 6 }}>
@@ -547,7 +575,7 @@ setError(
                 <div style={{ flex: 1, fontSize: 26, fontWeight: 700, color: selectedRoute ? "#818CF8" : "#1A1F2E", minWidth: 0 }}>
                   {selectedRoute ? fmt(selectedRoute.toAmount, toToken.decimals) : "0.00"}
                 </div>
-                <TokenDropdown value={toToken} onChange={t => { setToToken(t); setToTokenUnverified(!SUPPORTED_TOKENS[toChain.id]?.find(x => x.address === t.address)); reset(); }} chainId={toChain.id} />
+                <TokenDropdown value={toToken} walletAddress={address} onChange={t => { setToToken(t); setToTokenUnverified(!SUPPORTED_TOKENS[toChain.id]?.find(x => x.address === t.address)); reset(); }} chainId={toChain.id} />
               </div>
               {selectedRoute && (
                 <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.04)" }}>
