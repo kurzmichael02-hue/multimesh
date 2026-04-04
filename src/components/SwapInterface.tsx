@@ -302,7 +302,10 @@ export function SwapInterface() {
   const [showSlippage, setShowSlippage] = useState(false);
   const [slippage, setSlippage]   = useState(5);
   const [fromTokenUnverified, setFromTokenUnverified] = useState(false);
-  const [toTokenUnverified, setToTokenUnverified] = useState(false);
+const [toTokenUnverified, setToTokenUnverified] = useState(false);
+const [showRecipient, setShowRecipient] = useState(false);
+const [recipientAddress, setRecipientAddress] = useState("");
+const [recipientError, setRecipientError] = useState("");
   const swap = useSwapExecution();
   const settingsRef = useRef<HTMLDivElement>(null!);
 
@@ -341,7 +344,12 @@ export function SwapInterface() {
     setLoading(true); setError(""); reset();
     try {
       const fromAmount = ethers.parseUnits(amount, fromToken.decimals).toString();
-      const result = await getRoutes({ fromChainId: fromChain.id, toChainId: toChain.id, fromTokenAddress: fromToken.address, toTokenAddress: toToken.address, fromAmount, fromAddress: address, slippage: slippage / 100 });
+      if (showRecipient && recipientAddress && !/^0x[a-fA-F0-9]{40}$/.test(recipientAddress)) {
+  setRecipientError("Invalid wallet address");
+  setLoading(false);
+  return;
+}
+const result = await getRoutes({ fromChainId: fromChain.id, toChainId: toChain.id, fromTokenAddress: fromToken.address, toTokenAddress: toToken.address, fromAmount, fromAddress: address, slippage: slippage / 100 });
       if (result.length === 0) setError("No routes found. Try a different amount or pair.");
       else { setRoutes(result); setSelectedRoute(result[0]); setTimeout(() => setRoutesVisible(true), 50); }
     } catch (e: any) {
@@ -548,7 +556,24 @@ setError(
                 </div>
               )}
             </div>
-
+              {/* Recipient Address */}
+<div style={{ marginTop: 8 }}>
+  <button onClick={() => { setShowRecipient(s => !s); setRecipientAddress(""); setRecipientError(""); }}
+    style={{ fontSize: 11, fontFamily: "monospace", color: showRecipient ? "#818CF8" : "#4B5A72", background: "none", border: "none", cursor: "pointer", padding: 0, letterSpacing: 0.5 }}>
+    {showRecipient ? "▾ Send to different wallet" : "▸ Send to different wallet"}
+  </button>
+  {showRecipient && (
+    <div style={{ marginTop: 6 }}>
+      <input
+        value={recipientAddress}
+        onChange={e => { setRecipientAddress(e.target.value); setRecipientError(""); }}
+        placeholder="0x... recipient address"
+        style={{ width: "100%", background: "rgba(255,255,255,0.04)", border: recipientError ? "1px solid rgba(239,68,68,0.4)" : "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "9px 12px", fontSize: 12, fontFamily: "monospace", color: "#EEF2FF", outline: "none" }}
+      />
+      {recipientError && <div style={{ fontSize: 10, color: "#F87171", marginTop: 3, fontFamily: "monospace" }}>{recipientError}</div>}
+    </div>
+  )}
+</div>
             <button onClick={findRoutes} disabled={loading || !amount} style={{ width: "100%", padding: 14, borderRadius: 14, background: loading || !amount ? "#0D1020" : "#6366F1", color: loading || !amount ? "#2D3A50" : "#fff", border: "none", fontWeight: 700, fontSize: 14, cursor: loading || !amount ? "not-allowed" : "pointer", marginTop: 8 }}>
               {loading ? (
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
