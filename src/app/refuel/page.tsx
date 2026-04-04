@@ -127,12 +127,12 @@ export default function RefuelPage() {
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <input type="number" value={amount} onChange={e => { setAmount(e.target.value); setQuote(null); }}
                 style={{ flex: 1, background: "transparent", border: "none", outline: "none", fontSize: 22, fontWeight: 700, color: "#EEF2FF", fontFamily: "'DM Sans',sans-serif" }} />
-              <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "flex-end" }}>
+              <div style={{ display: "flex", gap: 4, flexWrap: "wrap", justifyContent: "flex-end", maxWidth: 220 }}>
                 {CHAINS.map(c => (
                   <button key={c.id} className="chain-btn" onClick={() => { setFromChain(c); setQuote(null); }}
                     style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 8px", borderRadius: 8, background: fromChain.id === c.id ? "rgba(99,102,241,0.12)" : "rgba(255,255,255,0.03)", border: fromChain.id === c.id ? "1px solid rgba(99,102,241,0.4)" : "1px solid rgba(255,255,255,0.06)", cursor: "pointer" }}>
                     <Img src={c.logo} size={16} />
-                    <span style={{ fontSize: 11, fontWeight: 600, color: fromChain.id === c.id ? "#818CF8" : "#6B7FA3" }}>{c.name}</span>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: fromChain.id === c.id ? "#818CF8" : "#6B7FA3" }}>{c.name.split(" ")[0]}</span>
                   </button>
                 ))}
               </div>
