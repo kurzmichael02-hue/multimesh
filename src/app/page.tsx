@@ -148,21 +148,19 @@ export default function LandingPage() {
           </span>
           <span style={{ fontSize: 9, fontFamily: "monospace", color: "#F59E0B", background: "rgba(245,158,11,0.1)", padding: "2px 6px", borderRadius: 4, letterSpacing: 1 }}>BETA</span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
-          {[
-            { href: "/limit-orders", label: "Limit Orders" },
-            { href: "/points", label: "Points ✦" },
-            { href: "/refuel", label: "Refuel" },
-            { href: "/analytics", label: "Analytics" },
-            { href: "/docs", label: "Docs" },
-          ].map(({ href, label }) => (
-            <Link key={href} href={href} style={{ fontSize: 13, fontWeight: 500, color: "#6B7FA3", textDecoration: "none", transition: "color 0.2s" }}
-              onMouseEnter={e => (e.currentTarget.style.color = "#EEF2FF")}
-              onMouseLeave={e => (e.currentTarget.style.color = "#6B7FA3")}
-            >{label}</Link>
-          ))}
-          <ConnectButton chainStatus="none" showBalance={false} />
-        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+  {[
+    { href: "/limit-orders", label: "Limit Orders" },
+    { href: "/points", label: "Points ✦" },
+    { href: "/analytics", label: "Analytics" },
+  ].map(({ href, label }) => (
+    <Link key={href} href={href} style={{ fontSize: 13, fontWeight: 500, color: "#6B7FA3", textDecoration: "none" }}
+      onMouseEnter={e => (e.currentTarget.style.color = "#EEF2FF")}
+      onMouseLeave={e => (e.currentTarget.style.color = "#6B7FA3")}
+    >{label}</Link>
+  ))}
+  <ConnectButton chainStatus="none" showBalance={false} />
+</div>
       </nav>
 
       {/* Hero */}
