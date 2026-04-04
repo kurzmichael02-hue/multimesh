@@ -403,7 +403,7 @@ const result = await getRoutes({ fromChainId: fromChain.id, toChainId: toChain.i
     } catch (e: any) {
       const msg = e?.message ?? "";
 setError(
-  msg.includes("allowance") || msg.includes("returned no data") ? "This token doesn't support standard swapping on this chain." :
+  msg.includes("allowance") || msg.includes("returned no data") ? "Swap failed — token may need manual approval or has a transfer restriction." :
   msg.includes("No route") || msg.includes("no route") ? "No route found for this pair. Try a different amount or token." :
   msg.includes("rejected") || msg.includes("denied") ? "Transaction cancelled." :
   msg.includes("insufficient") ? "Insufficient balance or gas." :
