@@ -290,7 +290,7 @@ export default function LandingPage() {
           </div>
           <div style={{ display: "flex", gap: 48, flexWrap: "wrap" }}>
             <div>
-              <div style={{ fontSize: 10, fontFamily: "monospace", color: "#4B5A72", letterSpacing: 1.5, marginBottom: 14 }}>PRODUCT</div>
+  <div style={{ fontSize: 10, fontFamily: "monospace", color: "#4B5A72", letterSpacing: 1.5, marginBottom: 14 }}>PRODUCT</div>
   {[
     { href: "/limit-orders", label: "Limit Orders" },
     { href: "/points", label: "Points" },
