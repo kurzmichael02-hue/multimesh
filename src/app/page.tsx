@@ -186,7 +186,8 @@ export default function LandingPage() {
             </div>
             <p style={{ fontSize: 12, color: "#4B5A72", margin: 0, maxWidth: 220, lineHeight: 1.6 }}>Cross-chain swap aggregator. Non-custodial, open source, live on mainnet.</p>
             <div style={{ display: "flex", gap: 12, marginTop: 16 }}>
-              <a href="https://twitter.com/MultiMeshXYZ" target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, fontFamily: "monospace", color: "#4B5A72", textDecoration: "none" }}>Twitter ↗</a>
+  <a href="mailto:contact@themultimesh.com" style={{ fontSize: 11, fontFamily: "monospace", color: "#4B5A72", textDecoration: "none" }}>Contact ↗</a>
+  <a href="https://twitter.com/MultiMeshXYZ" target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, fontFamily: "monospace", color: "#4B5A72", textDecoration: "none" }}>Twitter ↗</a>
               <a href="https://github.com/kurzmichael02-hue/multimesh" target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, fontFamily: "monospace", color: "#4B5A72", textDecoration: "none" }}>GitHub ↗</a>
             </div>
           </div>

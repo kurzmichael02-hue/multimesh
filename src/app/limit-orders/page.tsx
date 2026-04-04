@@ -6,6 +6,7 @@ import { ethers } from "ethers";
 import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import { SUPPORTED_CHAINS, SUPPORTED_TOKENS } from "@/lib/wagmi";
+import { usePhantomWallet } from "@/hooks/usePhantomWallet";
 
 const supabase = createClient(
   "https://fommgavmoligvesyxbmx.supabase.co",
@@ -135,8 +136,11 @@ function StatusBadge({ status }: { status: string }) {
 
 export default function LimitOrdersPage() {
   const { address } = useAccount();
+  const phantom = usePhantomWallet();
   const [srcChain, setSrcChain] = useState(1);
   const [dstChain, setDstChain] = useState(137);
+const isSolanaSource = srcChain === 999999;
+const isSolanaDestination = dstChain === 999999;
   const [srcToken, setSrcToken] = useState({ address: "0x0000000000000000000000000000000000000000", symbol: "ETH" });
   const [dstToken, setDstToken] = useState({ address: "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174", symbol: "USDC" });
   const [srcAmount, setSrcAmount] = useState("");
@@ -150,7 +154,7 @@ export default function LimitOrdersPage() {
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [tab, setTab] = useState<"create" | "my-orders">("create");
 
-  const isSolanaDestination = dstChain === 999999;
+  
 
   useEffect(() => { if (address) fetchOrders(); }, [address]);
 
@@ -374,9 +378,14 @@ export default function LimitOrdersPage() {
                 <div style={{ fontSize: 11, fontFamily: "monospace", color: "#F87171", padding: "8px 12px", background: "rgba(239,68,68,0.06)", borderRadius: 8, marginBottom: 12 }}>{error}</div>
               )}
 
-              {!address ? (
-                <div style={{ display: "flex", justifyContent: "center" }}><ConnectButton /></div>
-              ) : !quote ? (
+              {isSolanaSource && !phantom.connected ? (
+  <button onClick={phantom.connect} disabled={phantom.connecting}
+    style={{ width: "100%", padding: 14, borderRadius: 12, background: "#9945FF", color: "#fff", border: "none", fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+    {phantom.connecting ? "Connecting..." : phantom.hasPhantom ? "Connect Phantom" : "Install Phantom →"}
+  </button>
+) : !isSolanaSource && !address ? (
+  <div style={{ display: "flex", justifyContent: "center" }}><ConnectButton /></div>
+) : !quote ? (
                 <button onClick={getQuote} disabled={loading || !srcAmount}
                   style={{ width: "100%", padding: 14, borderRadius: 12, background: loading || !srcAmount ? "#0D1020" : "#6366F1", color: loading || !srcAmount ? "#2D3A50" : "#fff", border: "none", fontWeight: 700, fontSize: 14, cursor: loading || !srcAmount ? "not-allowed" : "pointer" }}>
                   {loading ? (
