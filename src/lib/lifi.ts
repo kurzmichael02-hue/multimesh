@@ -431,14 +431,14 @@ async function fetchSwapApiFallback(req: RouteRequest): Promise<RouteResult | nu
       estimate: {
         fromAmount: d.amountIn ?? req.fromAmount,
         toAmount: d.expectedAmountOut ?? "0",
-        approvalAddress: d.tx.to,
+        approvalAddress: d.allowanceTarget ?? d.tx.to,
         executionDuration: 30,
         gasCosts: [{ amountUSD: "0" }],
       },
       transactionRequest: {
         to: d.tx.to,
         data: d.tx.data,
-        value: d.tx.value ?? "0",
+        value: d.tx.value ? (d.tx.value.startsWith("0x") ? String(BigInt(d.tx.value)) : d.tx.value) : "0",
         gasLimit: d.tx.gas ?? "300000",
         gasPrice: d.tx.gasPrice ?? "0",
         chainId: req.fromChainId,
