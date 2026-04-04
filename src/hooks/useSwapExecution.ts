@@ -63,7 +63,7 @@ export function useSwapExecution() {
     error: null,
   });
 
-  const execute = useCallback(async (quote: any) => {
+  const execute = useCallback(async (quote: any, toAddress?: string) => {
     if (!address) throw new Error("Wallet not connected");
     abortRef.current = false;
 

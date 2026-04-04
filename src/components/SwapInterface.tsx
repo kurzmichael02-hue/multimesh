@@ -129,6 +129,22 @@ function TokenDropdown({ value, onChange, chainId }: { value: Token; onChange: (
     setSearch("");
   }, [chainId]);
 
+  const [tokenPrices, setTokenPrices] = useState<Record<string, string>>({});
+
+  const fetchPrices = async (tokenList: Token[]) => {
+    try {
+      const addresses = tokenList.slice(0, 20).map(t => `${chainId}:${t.address}`).join(",");
+      const res = await fetch(`https://coins.llama.fi/prices/current/${addresses}?searchWidth=4h`);
+      const data = await res.json();
+      const prices: Record<string, string> = {};
+      Object.entries(data.coins ?? {}).forEach(([key, val]: [string, any]) => {
+        const addr = key.split(":")[1]?.toLowerCase();
+        if (addr && val?.price) prices[addr] = val.price < 0.01 ? val.price.toFixed(6) : val.price < 1 ? val.price.toFixed(4) : val.price.toFixed(2);
+      });
+      setTokenPrices(prices);
+    } catch {}
+  };
+
   const fetchTokens = async () => {
     if (allTokens.length > 10) return; // already loaded
     setLoadingTokens(true);
@@ -143,6 +159,7 @@ function TokenDropdown({ value, onChange, chainId }: { value: Token; onChange: (
       // Put popular tokens first
       const popular = SUPPORTED_TOKENS[chainId]?.map(t => t.address.toLowerCase()) ?? [];
       const sorted = [...mapped.filter(t => popular.includes(t.address.toLowerCase())), ...mapped.filter(t => !popular.includes(t.address.toLowerCase()))];
+      fetchPrices(sorted);
       setAllTokens(sorted);
       setTokens(sorted);
     } catch { /* fallback to hardcoded */ }
@@ -212,7 +229,10 @@ function TokenDropdown({ value, onChange, chainId }: { value: Token; onChange: (
                 <Img src={t.logo || TOKEN_LOGOS[t.symbol] || ""} size={22} />
                 <div style={{ textAlign: "left", minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 700, color: t.address === value.address ? "#818CF8" : "#EEF2FF" }}>{t.symbol}</div>
-                  <div style={{ fontSize: 10, color: "#4B5A72", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 140 }}>{t.name}</div>
+                  <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+  <div style={{ fontSize: 10, color: "#4B5A72", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 100 }}>{t.name}</div>
+  {tokenPrices[t.address.toLowerCase()] && <div style={{ fontSize: 10, fontFamily: "monospace", color: "#22C55E", flexShrink: 0 }}>${tokenPrices[t.address.toLowerCase()]}</div>}
+</div>
                 </div>
               </button>
             ))}
@@ -603,7 +623,7 @@ setError(
 
           {!loading && routes.length > 0 && (
             <div style={{ marginTop: 12 }}>
-              <button onClick={() => { if (address && selectedRoute) { swap.execute(selectedRoute); } else if (!address) { alert("Connect your wallet first"); } }} style={{ width: "100%", padding: 15, borderRadius: 14, background: "#6366F1", color: "#fff", border: "none", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
+              <button onClick={() => { if (address && selectedRoute) { swap.execute(selectedRoute, showRecipient && recipientAddress ? recipientAddress : undefined); } else if (!address) { alert("Connect your wallet first"); } }} style={{ width: "100%", padding: 15, borderRadius: 14, background: "#6366F1", color: "#fff", border: "none", fontWeight: 700, fontSize: 15, cursor: "pointer" }}>
                 {address ? "Swap Now" : "Connect Wallet to Swap"}
               </button>
             </div>
