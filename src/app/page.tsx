@@ -148,19 +148,18 @@ export default function LandingPage() {
           </span>
           <span style={{ fontSize: 9, fontFamily: "monospace", color: "#F59E0B", background: "rgba(245,158,11,0.1)", padding: "2px 6px", borderRadius: 4, letterSpacing: 1 }}>BETA</span>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-  {[
-    { href: "/limit-orders", label: "Limit Orders" },
-    { href: "/points", label: "Points ✦" },
-    { href: "/analytics", label: "Analytics" },
-  ].map(({ href, label }) => (
-    <Link key={href} href={href} style={{ fontSize: 13, fontWeight: 500, color: "#6B7FA3", textDecoration: "none" }}
-      onMouseEnter={e => (e.currentTarget.style.color = "#EEF2FF")}
-      onMouseLeave={e => (e.currentTarget.style.color = "#6B7FA3")}
-    >{label}</Link>
-  ))}
-  <ConnectButton chainStatus="none" showBalance={false} />
-</div>
+        <div style={{ display: "flex", alignItems: "center", gap: 20 }}>
+          {[
+            { href: "/limit-orders", label: "Limit Orders" },
+            { href: "/points", label: "Points ✦" },
+          ].map(({ href, label }: { href: string; label: string }) => (
+            <Link key={href} href={href} style={{ fontSize: 13, fontWeight: 500, color: "#6B7FA3", textDecoration: "none" }}
+              onMouseEnter={e => (e.currentTarget.style.color = "#EEF2FF")}
+              onMouseLeave={e => (e.currentTarget.style.color = "#6B7FA3")}
+            >{label}</Link>
+          ))}
+          <ConnectButton chainStatus="none" showBalance={false} />
+        </div>
       </nav>
 
       {/* Hero */}
@@ -292,18 +291,17 @@ export default function LandingPage() {
           <div style={{ display: "flex", gap: 48, flexWrap: "wrap" }}>
             <div>
               <div style={{ fontSize: 10, fontFamily: "monospace", color: "#4B5A72", letterSpacing: 1.5, marginBottom: 14 }}>PRODUCT</div>
-              {[
-                { href: "/#swap", label: "Swap" },
-                { href: "/limit-orders", label: "Limit Orders" },
-                { href: "/refuel", label: "Gas Refuel" },
-                { href: "/points", label: "Points" },
-                { href: "/analytics", label: "Analytics" },
-              ].map(({ href, label }) => (
-                <div key={href} style={{ marginBottom: 8 }}>
-                  <Link href={href} style={{ fontSize: 13, color: "#6B7FA3", textDecoration: "none" }}>{label}</Link>
-                </div>
-              ))}
-            </div>
+  {[
+    { href: "/limit-orders", label: "Limit Orders" },
+    { href: "/points", label: "Points" },
+    { href: "/analytics", label: "Analytics" },
+    { href: "/refuel", label: "Gas Refuel" },
+  ].map(({ href, label }) => (
+    <div key={href} style={{ marginBottom: 8 }}>
+      <Link href={href} style={{ fontSize: 13, color: "#6B7FA3", textDecoration: "none" }}>{label}</Link>
+    </div>
+  ))}
+</div>
             <div>
               <div style={{ fontSize: 10, fontFamily: "monospace", color: "#4B5A72", letterSpacing: 1.5, marginBottom: 14 }}>DEVELOPERS</div>
               {[
