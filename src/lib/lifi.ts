@@ -394,12 +394,66 @@ async function fetchAdvancedRoutes(req: RouteRequest): Promise<RouteResult | nul
 // PUBLIC API
 // ============================================================================
 
+async function fetchSwapApiFallback(req: RouteRequest): Promise<RouteResult | null> {
+  // Only for same-chain swaps
+  if (req.fromChainId !== req.toChainId) return null;
+  try {
+    const params = new URLSearchParams({
+      tokenIn: req.fromTokenAddress,
+      tokenOut: req.toTokenAddress,
+      amount: req.fromAmount,
+      sender: req.fromAddress ?? CONFIG.FEE_WALLET,
+      slippage: String((req.slippage ?? 0.05) * 100),
+    });
+    const url = `https://api.swapapi.dev/v1/swap/${req.fromChainId}?${params}`;
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) return null;
+    const json = await res.json();
+    if (!json?.success || !json?.data?.tx) return null;
+    const d = json.data;
+    return {
+      id: "swapapi-fallback",
+      tool: d.dex ?? "DEX",
+      fromAmount: d.amountIn ?? req.fromAmount,
+      toAmount: d.expectedAmountOut ?? "0",
+      toAmountUSD: "0",
+      gasCostUSD: "0",
+      executionDuration: 30,
+      steps: [],
+      tags: ["RECOMMENDED"],
+      action: {
+        fromToken: { address: req.fromTokenAddress, symbol: "", decimals: 18, chainId: req.fromChainId },
+        toToken: { address: req.toTokenAddress, symbol: "", decimals: 18, chainId: req.toChainId },
+        fromAmount: req.fromAmount,
+        fromChainId: req.fromChainId,
+        toChainId: req.toChainId,
+      },
+      estimate: {
+        fromAmount: d.amountIn ?? req.fromAmount,
+        toAmount: d.expectedAmountOut ?? "0",
+        approvalAddress: d.tx.to,
+        executionDuration: 30,
+        gasCosts: [{ amountUSD: "0" }],
+      },
+      transactionRequest: {
+        to: d.tx.to,
+        data: d.tx.data,
+        value: d.tx.value ?? "0",
+        gasLimit: d.tx.gas ?? "300000",
+        gasPrice: d.tx.gasPrice ?? "0",
+        chainId: req.fromChainId,
+        from: req.fromAddress ?? CONFIG.FEE_WALLET,
+      },
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function getRoutes(req: RouteRequest): Promise<RouteResult[]> {
   try {
-    // Validate input
     RouteRequestSchema.parse(req);
 
-    // Run both fetches in parallel
     const [quote, advanced] = await Promise.allSettled([
       fetchQuote(req),
       fetchAdvancedRoutes(req),
@@ -408,9 +462,12 @@ export async function getRoutes(req: RouteRequest): Promise<RouteResult[]> {
       results[1].status === "fulfilled" ? results[1].value : null,
     ]);
 
-    // Return best route
     if (quote) return [quote];
     if (advanced) return [advanced];
+
+    // LI.FI found nothing — try SwapAPI for same-chain tokens
+    const swapApiFallback = await fetchSwapApiFallback(req);
+    if (swapApiFallback) return [swapApiFallback];
 
     throw new LiFiError(
       "NO_ROUTES",
