@@ -154,7 +154,7 @@ export default function AnalyticsPage() {
               <StatCard label="REFERRALS" value={String(stats!.totalReferrals)} sub="Active codes" />
             </div>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))", gap: 16, marginBottom: 16 }}>
               {/* Top Routes */}
               <div style={{ background: "rgba(10,12,22,0.9)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 16, padding: 20 }}>
                 <div style={{ fontSize: 10, fontFamily: "monospace", color: "#4B5A72", letterSpacing: 1.5, marginBottom: 16 }}>TOP ROUTES</div>
@@ -181,9 +181,9 @@ export default function AnalyticsPage() {
                   { label: "Status", value: "Beta Mainnet" },
                   { label: "Treasury", value: "2-of-2 Safe" },
                 ].map(({ label, value }) => (
-                  <div key={label} style={{ display: "flex", justifyContent: "space-between", padding: "8px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                    <span style={{ fontSize: 12, color: "#6B7FA3" }}>{label}</span>
-                    <span style={{ fontSize: 12, fontWeight: 600, color: "#EEF2FF", fontFamily: "monospace" }}>{value}</span>
+                  <div key={label} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderBottom: "1px solid rgba(255,255,255,0.04)", gap: 8 }}>
+  <span style={{ fontSize: 12, color: "#6B7FA3", flexShrink: 0 }}>{label}</span>
+  <span style={{ fontSize: 12, fontWeight: 600, color: "#EEF2FF", fontFamily: "monospace", textAlign: "right" }}>{value}</span>
                   </div>
                 ))}
               </div>
@@ -200,13 +200,13 @@ export default function AnalyticsPage() {
                 </div>
               ) : (
                 <div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 80px 120px", padding: "8px 20px", background: "rgba(255,255,255,0.02)", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 70px 90px", padding: "8px 14px", background: "rgba(255,255,255,0.02)", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
                     {["Wallet", "Route", "Volume", "Time"].map(h => (
                       <div key={h} style={{ fontSize: 10, fontFamily: "monospace", color: "#4B5A72", letterSpacing: 1 }}>{h}</div>
                     ))}
                   </div>
                   {stats!.recentSwaps.map((s: any, i: number) => (
-                    <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 80px 120px", padding: "12px 20px", borderBottom: "1px solid rgba(255,255,255,0.03)", alignItems: "center" }}>
+                    <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 70px 90px", padding: "10px 14px", borderBottom: "1px solid rgba(255,255,255,0.03)", alignItems: "center" }}>
                       <span style={{ fontSize: 12, fontFamily: "monospace", color: "#818CF8" }}>{shortWallet(s.wallet)}</span>
                       <span style={{ fontSize: 12, color: "#EEF2FF" }}>{CHAIN_NAMES[s.from_chain] ?? s.from_chain} → {CHAIN_NAMES[s.to_chain] ?? s.to_chain}</span>
                       <span style={{ fontSize: 12, fontFamily: "monospace", color: "#22C55E" }}>{fmt(parseFloat(s.amount_usd ?? 0))}</span>
