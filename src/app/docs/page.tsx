@@ -131,7 +131,28 @@ export default function DocsPage() {
 
       <div style={{ maxWidth:860, margin:"0 auto", padding:"60px 24px 100px", position:"relative", zIndex:1 }}>
 
-        <div className="fade-in" style={{ marginBottom:64 }}>
+        {/* Protocol Docs */}
+<div style={{ marginBottom: 64 }}>
+  <a href="https://multimesh.gitbook.io/multimesh-docs" target="_blank" rel="noopener noreferrer"
+    style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "rgba(99,102,241,0.08)", border: "1px solid rgba(99,102,241,0.2)", borderRadius: 100, padding: "4px 14px", marginBottom: 24, textDecoration: "none" }}>
+    <span style={{ fontSize: 11, fontFamily: "monospace", color: "#818CF8", letterSpacing: 0.5 }}>📖 Full Docs on GitBook ↗</span>
+  </a>
+  <h1 style={{ fontSize: "clamp(28px,5vw,44px)", fontWeight: 700, fontFamily: "'Space Grotesk',sans-serif", letterSpacing: -1, margin: "0 0 40px" }}>Protocol Documentation</h1>
+
+  {[
+    { title: "Introduction", content: "MultiMesh is a cross-chain routing infrastructure designed to simplify token swaps across multiple blockchain ecosystems. As DeFi continues to expand across chains, users face increasing complexity when moving assets between networks. MultiMesh abstracts this complexity by providing a unified interface that aggregates liquidity, optimizes routing, and enables seamless cross-chain transactions." },
+    { title: "Problem Statement", content: "The current cross-chain experience in DeFi is fragmented and inefficient. Liquidity is distributed across multiple chains and protocols, making it difficult to find optimal routes. Executing cross-chain swaps often requires multiple platforms, manual bridge selection, and token conversions across interfaces. Users also lack clarity on fees, execution time, and route safety — creating uncertainty and reducing trust." },
+    { title: "Solution Overview", content: "MultiMesh addresses these challenges by acting as a unified routing layer for cross-chain transactions. Core features include: unified interface for all swaps, route aggregation across multiple liquidity sources, optimized execution based on cost/time/output, simplified UX that abstracts technical complexity, and non-custodial design where users retain full control of their assets." },
+    { title: "How Routing Works", content: "MultiMesh integrates with routing protocols such as LI.FI to access bridges, DEXes, and liquidity pools. The user selects source chain, destination chain, token pair and amount. MultiMesh then queries routing providers, evaluates fees and time, selects the optimal route, and executes through the necessary bridges and swaps. Key principles: efficiency (best output), speed (execution time), and reliability (successful completion)." },
+    { title: "Long Term Vision", content: "Become a meta-aggregator across multiple routing providers. Enable cross-chain limit orders. Provide unified liquidity access across ecosystems. Power cross-chain functionality for third-party applications. MultiMesh positions itself as a foundational layer in the multi-chain future of DeFi." },
+  ].map(({ title, content }) => (
+    <div key={title} style={{ marginBottom: 32, paddingBottom: 32, borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+      <h2 style={{ fontSize: 18, fontWeight: 700, fontFamily: "'Space Grotesk',sans-serif", color: "#EEF2FF", margin: "0 0 10px" }}>{title}</h2>
+      <p style={{ fontSize: 14, color: "#6B7FA3", lineHeight: 1.8, margin: 0 }}>{content}</p>
+    </div>
+  ))}
+</div>
+<div style={{ borderTop: "1px solid rgba(255,255,255,0.05)", paddingTop: 48, marginBottom: 64 }}>
           <div style={{ fontSize:11, fontFamily:"monospace", color:"#4B5A72", letterSpacing:2, marginBottom:16 }}>WIDGET INTEGRATION</div>
           <h1 style={{ fontSize:"clamp(32px,5vw,52px)", fontWeight:700, fontFamily:"'Space Grotesk',sans-serif", letterSpacing:-1.5, lineHeight:1.1, margin:"0 0 20px" }}>
             Embed cross-chain swaps<br />
