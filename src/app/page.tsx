@@ -285,7 +285,7 @@ export default function LandingPage() {
             </p>
             <div style={{ display: "flex", gap: 12, marginTop: 16 }}>
               <a href="https://twitter.com/MultiMeshXYZ" target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, fontFamily: "monospace", color: "#4B5A72", textDecoration: "none" }}>Twitter ↗</a>
-              <a href="https://github.com/kurzmichael02-hue/multimesh" target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, fontFamily: "monospace", color: "#4B5A72", textDecoration: "none" }}>GitHub ↗</a>
+              <a href="https://github.com/kurzmichael02-hue/multimesh" target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, fontFamily: "monospace", color: "#4B5A72", textDecoration: "none" }}>Repo ↗</a>
             </div>
           </div>
           <div style={{ display: "flex", gap: 48, flexWrap: "wrap" }}>
@@ -307,7 +307,7 @@ export default function LandingPage() {
               {[
                 { href: "/widget", label: "Widget" },
                 { href: "/docs", label: "Docs" },
-                { href: "https://github.com/kurzmichael02-hue/multimesh", label: "GitHub" },
+                { href: "https://github.com/kurzmichael02-hue/multimesh", label: "Source Code" },
               ].map(({ href, label }) => (
                 <div key={href} style={{ marginBottom: 8 }}>
                   <Link href={href} style={{ fontSize: 13, color: "#6B7FA3", textDecoration: "none" }}>{label}</Link>
