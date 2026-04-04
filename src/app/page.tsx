@@ -86,7 +86,7 @@ export default function LandingPage() {
       {/* Nav */}
       <nav style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, height: 64, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 20px", borderBottom: "1px solid rgba(255,255,255,0.04)", background: "rgba(4,6,14,0.9)", backdropFilter: "blur(16px)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <img src="/logo.jpg" width={36} height={36} style={{ borderRadius: "50%", mixBlendMode: "screen" }} />
+          <img src="/logo.jpg" width={36} height={36} style={{ borderRadius: "50%", background: "#fff" }} />
           <span style={{ fontSize: 16, fontWeight: 700, fontFamily: "'Space Grotesk',sans-serif" }}>MULTI<span style={{ color: "#818CF8" }}>MESH</span></span>
           <span style={{ fontSize: 9, fontFamily: "monospace", color: "#F59E0B", background: "rgba(245,158,11,0.1)", padding: "2px 6px", borderRadius: 4, letterSpacing: 1 }}>BETA</span>
         </div>

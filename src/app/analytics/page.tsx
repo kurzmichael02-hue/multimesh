@@ -206,11 +206,11 @@ export default function AnalyticsPage() {
                     ))}
                   </div>
                   {stats!.recentSwaps.map((s: any, i: number) => (
-                    <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 1fr 70px 90px", padding: "10px 14px", borderBottom: "1px solid rgba(255,255,255,0.03)", alignItems: "center" }}>
-                      <span style={{ fontSize: 12, fontFamily: "monospace", color: "#818CF8" }}>{shortWallet(s.wallet)}</span>
-                      <span style={{ fontSize: 12, color: "#EEF2FF" }}>{CHAIN_NAMES[s.from_chain] ?? s.from_chain} → {CHAIN_NAMES[s.to_chain] ?? s.to_chain}</span>
-                      <span style={{ fontSize: 12, fontFamily: "monospace", color: "#22C55E" }}>{fmt(parseFloat(s.amount_usd ?? 0))}</span>
-                      <span style={{ fontSize: 10, fontFamily: "monospace", color: "#4B5A72" }}>{fmtTime(s.created_at)}</span>
+                    <div key={i} style={{ display: "flex", flexWrap: "wrap", gap: "4px 12px", padding: "10px 14px", borderBottom: "1px solid rgba(255,255,255,0.03)", alignItems: "center" }}>
+                      <span style={{ fontSize: 12, fontFamily: "monospace", color: "#818CF8", flexShrink: 0 }}>{shortWallet(s.wallet)}</span>
+<span style={{ fontSize: 12, color: "#EEF2FF", flexShrink: 0 }}>{CHAIN_NAMES[s.from_chain] ?? s.from_chain} → {CHAIN_NAMES[s.to_chain] ?? s.to_chain}</span>
+<span style={{ fontSize: 12, fontFamily: "monospace", color: "#22C55E", flexShrink: 0 }}>{fmt(parseFloat(s.amount_usd ?? 0))}</span>
+<span style={{ fontSize: 10, fontFamily: "monospace", color: "#4B5A72", flexShrink: 0 }}>{fmtTime(s.created_at)}</span>
                     </div>
                   ))}
                 </div>
